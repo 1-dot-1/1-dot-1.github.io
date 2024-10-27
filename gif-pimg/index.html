@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>GIF프사 만들기</title>
+    <link rel="icon" href="https://i.imgur.com/2MkyDCh.png" type="image/png">
+    <style>
+        .file-upload-wrapper {
+            text-align: center;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0);
+            min-width: 350px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: auto;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            margin: 100px 0; /* Adjust the margin as needed */
+            width: 600px; /* Fixed width */
+            height: 61px; /* Fixed height */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+            font-weight: bold;
+            font-size: 30px;
+        }
+
+        button:hover {
+            background-color: #005BDD;
+            transform: translateY(2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        button:active {
+            background-color: #0026a3;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        #file-name {
+            margin: 10px 0;
+            font-weight: bold;
+            font-size: 30px;
+        }
+
+        #hidden-file-input {
+            display: none;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: start;
+            margin-bottom: 20px;
+            font-size: 30px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .header-content img {
+            margin-right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="file-upload-wrapper">
+        <div class="header-content">
+            <img src="https://i.imgur.com/2MkyDCh.png" alt="Logo" style="width: 120px; height: auto;">
+            <h1>파란행성 SVG 변환 사이트</h1>
+        </div>
+        <button id="custom-button">여기를 클릭해 GIF파일을 선택하세요</button>
+        <input type="file" id="hidden-file-input" accept="image/gif" style="display: none;" />
+        <div id="file-name">파일이 선택되지 않았습니다.</div>
+        <button id="upload-button">여기를 클릭해 다운로드</button>
+    </div>
+
+    <script>
+document.getElementById('custom-button').addEventListener('click', function() {
+    document.getElementById('hidden-file-input').click();
+});
+
+document.getElementById('hidden-file-input').addEventListener('change', function() {
+    const fileNameDisplay = document.getElementById('file-name');
+    fileNameDisplay.textContent = this.files[0].name;
+});
+
+document.getElementById('upload-button').addEventListener('click', function() {
+    const file = document.getElementById('hidden-file-input').files[0];
+    if (!file) {
+        alert('GIF파일을 선택한 후 다운로드가 가능합니다.');
+    } else {
+        // 파일이 선택되었을 때 SVG 변환 처리
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                // 이미지가 로드되면 SVG의 크기를 설정
+                const svgData = `<svg xmlns="http://www.w3.org/2000/svg" width="${this.width}px" height="${this.height}px">
+                                    <image href="${e.target.result}" width="${this.width}px" height="${this.height}px"/>
+                                 </svg>`;
+                // SVG 다운로드
+                const downloadLink = document.createElement('a');
+                downloadLink.href = 'data:image/svg+xml;base64,' + window.btoa(unescape(encodeURIComponent(svgData)));
+                downloadLink.download = 'image.svg';
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+    </script>
+</body>
+</html>

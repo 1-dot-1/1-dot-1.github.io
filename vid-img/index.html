@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>동영상 이미지 변환</title>
+    <link rel="icon" href="https://i.imgur.com/2MkyDCh.png" type="image/png">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Arial', sans-serif; /* 고딕체 스타일 적용 */
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 720px; /* 기존의 2.4배 */
+            margin: 10px 0;
+            text-align: center; /* 중앙 정렬 추가 */
+        }
+
+        .file-input-wrapper input[type="file"] {
+            display: none;
+        }
+
+        .file-input-wrapper button {
+            display: block;
+            width: 100%;
+            height: 61px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            text-align: center;
+            line-height: 40px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+            font-weight: bold;
+            font-size: 30px;
+        }
+
+        .file-input-wrapper button:hover {
+            background-color: #005BDD;
+            transform: translateY(2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .file-input-wrapper button:active {
+            background-color: #0026a3;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        #fileName {
+            margin: 10px 0;
+            font-size: 25px;
+            text-align: center; /* 중앙 정렬 추가 */
+        }
+
+        button#extractFrames {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            margin: 20px 0;
+            width: 100%;
+            max-width: 720px; /* 기존의 2.4배 */
+            height: 61px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+            font-weight: bold;
+            font-size: 30px;
+            text-align: center;
+        }
+
+        button#extractFrames:hover {
+            background-color: #005BDD;
+            transform: translateY(2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        button#extractFrames:active {
+            background-color: #0026a3;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        #loading {
+            display: none;
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            width: 100%; /* 100%로 조정 */
+            max-width: 864px; /* 720px의 1.2배 */
+        }
+
+        #progress {
+            width: 100%;
+            background-color: #f3f3f3;
+            border-radius: 24px; /* 15px의 1.6배 */
+            height: 24px; /* 15px의 1.6배 */
+            margin: 0 auto;
+            position: relative;
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background-color: #007BFF; /* 파랑색 */
+            border-radius: 24px; /* 15px의 1.6배 */
+        }
+
+        #progress-text {
+            position: absolute;
+            width: 100%;
+            top: 0;
+            left: 0;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .container {
+            text-align: center;
+            width: 100%;
+            max-width: 720px; /* 기존의 2.4배 */
+            margin: 0 auto;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: start;
+            margin-bottom: 20px;
+            font-size: 30px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .header-content img {
+            margin-right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-content">
+        <img src="https://i.imgur.com/2MkyDCh.png" alt="Logo" style="width: 120px; height: auto;">
+        <h1>파란행성 동영상 변환 사이트</h1>
+    </div>
+    <div class="container">
+        <div class="file-input-wrapper">
+            <input type="file" id="videoInput" accept="video/*">
+            <button id="fileButton">파일 선택</button>
+        </div>
+        <div id="fileName">선택된 파일 없음</div>
+        <div id="loading">
+            <div id="progress">
+                <div id="progress-bar"></div>
+                <div id="progress-text">0%</div>
+            </div>
+        </div>
+        <button id="extractFrames">변환</button>
+        <div id="framesContainer"></div>
+    </div>
+    <script>
+        document.getElementById('fileButton').addEventListener('click', () => {
+            document.getElementById('videoInput').click();
+        });
+
+        document.getElementById('videoInput').addEventListener('change', (event) => {
+            const fileName = event.target.files[0] ? event.target.files[0].name : '선택된 파일 없음';
+            document.getElementById('fileName').textContent = fileName;
+        });
+
+        document.getElementById('extractFrames').addEventListener('click', () => {
+            const videoInput = document.getElementById('videoInput').files[0];
+            if (!videoInput) return;
+
+            document.getElementById('loading').style.display = 'block';
+
+            const video = document.createElement('video');
+            video.src = URL.createObjectURL(videoInput);
+            video.muted = true;
+            video.play();
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const zip = new JSZip();
+
+            video.addEventListener('loadeddata', () => {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                let frames = [];
+                let folderNumber = 0;
+                let frameNumber = 0;
+                const totalFrames = Math.floor(video.duration * 30); // Assume 30 fps
+
+                const captureFrame = () => {
+                    if (video.currentTime >= video.duration) {
+                        if (frames.length > 0) {
+                            saveFrames(frames, folderNumber); // Save remaining frames
+                        }
+                        finalizeZip();
+                        return;
+                    }
+
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    canvas.toBlob(blob => {
+                        frames.push(blob);
+
+                        if (frames.length === 10) {
+                            saveFrames(frames, folderNumber);
+                            frames = [];
+                            folderNumber++;
+                        }
+
+                        frameNumber++;
+                        updateProgress(frameNumber, totalFrames);
+                        video.currentTime += 1 / 30; // Capture every frame (30fps)
+                    });
+
+                    if (video.currentTime < video.duration) {
+                        requestAnimationFrame(captureFrame);
+                    }
+                };
+
+                captureFrame();
+            });
+
+            function saveFrames(frames, folderNumber) {
+                const folder = zip.folder(`frames_${folderNumber}`);
+                frames.forEach((frame, index) => {
+                    folder.file(`frame${folderNumber * 10 + index}.png`, frame);
+                });
+            }
+
+            function finalizeZip() {
+                zip.generateAsync({ type: "blob" }).then(content => {
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(content);
+                    a.download = `video_frames.zip`;
+                    a.click();
+                    document.getElementById('loading').style.display = 'none';
+                });
+            }
+
+            function updateProgress(currentFrame, totalFrames) {
+                const progressText = document.getElementById('progress-text');
+                const progressBar = document.getElementById('progress-bar');
+                const progress = Math.floor((currentFrame / totalFrames) * 100);
+                progressText.textContent = `${progress}%`;
+                progressBar.style.width = `${progress}%`;
+            }
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.6.0/jszip.min.js"></script>
+</body>
+</html>
