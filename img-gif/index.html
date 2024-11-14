@@ -171,6 +171,14 @@
             font-weight: bold;
             color: #555555;
         }
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: start;
+            margin-bottom: 20px;
+            font-size: 30px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
     </style>
 </head>
 <body>
@@ -353,7 +361,10 @@
     </div>
 
     <div class="main">
-        <h2>미리보기</h2>
+        <div class="header-content">
+            <img src="https://i.imgur.com/2MkyDCh.png" alt="Logo" style="width: 120px; height: auto;">
+            <h1>gif 애니메이션</h1>
+        </div>
         <div class="preview" id="preview">
             <span>이미지를 업로드하세요</span>
         </div>
