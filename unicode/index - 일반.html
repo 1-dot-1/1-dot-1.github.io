@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>특수문자 복사</title>
+<link rel="icon" href="https://i.imgur.com/2MkyDCh.png" type="image/png">
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #ffffff;
+        color: #333;
+        padding: 20px;
+    }
+    h1 {
+        text-align: center;
+        color: #000000;
+    }
+    .unicode-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    .unicode-char {
+        font-size: 24px;
+        padding: 10px;
+        background-color: #f3f3f3;
+        border: 1px solid #c9c9c9;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: transform 0.2s, background-color 0.2s;
+    }
+    .unicode-char:hover {
+        transform: scale(1.2);
+        background-color: #f3f3f3;
+    }
+    .unicode-char:active {
+        transform: scale(1.1);
+        background-color: #e0e0e0;
+    }
+
+    .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: start;
+            margin-bottom: 20px;
+            font-size: 30px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .header-content img {
+            margin-right: 20px;
+    }
+
+    .copy-text {
+        font-weight: bold;
+        font-size: 20px;
+        background-color: rgb(0, 148, 44);
+        color: rgb(0, 255, 13);
+    }
+
+</style>
+<script>
+    function generateUnicodeRange(start, end) {
+        let range = "";
+        for (let i = start; i <= end; i++) {
+            range += `<span class="unicode-char" onclick="copyToClipboard('${String.fromCharCode(i)}')">${String.fromCharCode(i)}</span>`;
+        }
+        return range;
+    }
+
+    function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert(`${text} 복사되었습니다!`);
+        }).catch(err => {
+            alert('복사에 실패했습니다.');
+        });
+    } else {
+        // Fallback for older browsers
+        let textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";  // Avoid scrolling to bottom
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            alert(`${text} 복사되었습니다!`);
+        } catch (err) {
+            alert('복사에 실패했습니다.');
+        }
+        document.body.removeChild(textArea);
+    }
+}
+
+
+    function displayUnicode() {
+    const range1 = generateUnicodeRange(0xA960, 0xA97F);
+    const range2 = generateUnicodeRange(0xA980, 0xA9DF);
+    const range3 = generateUnicodeRange(0xAA80, 0xAADF);
+    const range4 = generateUnicodeRange(0xA490, 0xA4CF);
+    const range5 = generateUnicodeRange(0xA4D0, 0xA4FF);
+    const range6 = generateUnicodeRange(0xA500, 0xA63F);
+    const range7 = generateUnicodeRange(0xA640, 0xA69F);
+    const range8 = generateUnicodeRange(0xA700, 0xA71F);
+    const range9 = generateUnicodeRange(0xA720, 0xA7FF);
+    const range10 = generateUnicodeRange(0xA830, 0xA83F);
+    const range11 = generateUnicodeRange(0xA840, 0xA87F);
+    const range12 = generateUnicodeRange(0xA880, 0xA8DF);
+    const range13 = generateUnicodeRange(0xA8E0, 0xA8FF);
+    const range14 = generateUnicodeRange(0xA900, 0xA92F);
+    const range15 = generateUnicodeRange(0xA9E0, 0xA9FF);
+    const range16 = generateUnicodeRange(0xAA00, 0xAA5F);
+    const range17 = generateUnicodeRange(0xAA60, 0xAA7F);
+    const range18 = generateUnicodeRange(0xAB00, 0xAB2F);
+    const range19 = generateUnicodeRange(0xAB30, 0xAB6F);
+    const range20 = generateUnicodeRange(0xAB70, 0xABBF);
+    const range21 = generateUnicodeRange(0xABC0, 0xABFF);
+    const range22 = generateUnicodeRange(0x3200, 0x32FF);
+    const range23 = generateUnicodeRange(0x3300, 0x33FF);
+    const range24 = generateUnicodeRange(0x31F0, 0x31FF);
+    const range25 = generateUnicodeRange(0x31C0, 0x31EF);
+    const range26 = generateUnicodeRange(0x31A0, 0x31BF);
+    const range27 = generateUnicodeRange(0x3190, 0x319F);
+    const range28 = generateUnicodeRange(0x3130, 0x318F);
+    const range29 = generateUnicodeRange(0xA000, 0xA48F);
+    document.getElementById('range1').innerHTML = range1;
+    document.getElementById('range2').innerHTML = range2;
+    document.getElementById('range3').innerHTML = range3;
+    document.getElementById('range4').innerHTML = range4;
+    document.getElementById('range5').innerHTML = range5;
+    document.getElementById('range6').innerHTML = range6;
+    document.getElementById('range7').innerHTML = range7;
+    document.getElementById('range8').innerHTML = range8;
+    document.getElementById('range9').innerHTML = range9;
+    document.getElementById('range10').innerHTML = range10;
+    document.getElementById('range11').innerHTML = range11;
+    document.getElementById('range12').innerHTML = range12;
+    document.getElementById('range13').innerHTML = range13;
+    document.getElementById('range14').innerHTML = range14;
+    document.getElementById('range15').innerHTML = range15;
+    document.getElementById('range16').innerHTML = range16;
+    document.getElementById('range17').innerHTML = range17;
+    document.getElementById('range18').innerHTML = range18;
+    document.getElementById('range19').innerHTML = range19;
+    document.getElementById('range20').innerHTML = range20;
+    document.getElementById('range21').innerHTML = range21;
+    document.getElementById('range22').innerHTML = range22;
+    document.getElementById('range23').innerHTML = range23;
+    document.getElementById('range24').innerHTML = range24;
+    document.getElementById('range25').innerHTML = range25;
+    document.getElementById('range26').innerHTML = range26;
+    document.getElementById('range27').innerHTML = range27;
+    document.getElementById('range28').innerHTML = range28;
+    document.getElementById('range29').innerHTML = range29;
+}
+
+
+
+</script>
+</head>
+<body onload="displayUnicode()">
+<div class="header-content">
+    <img src="https://i.imgur.com/2MkyDCh.png" alt="Logo" style="width: 120px; height: auto;">
+    <h1>파란행성 특수문자 복사 사이트</h1>
+</div>
+<span class="copy-text">[글자를 클릭해서 복사하시오]</span>
+<div>
+    <h2>속담 알파벳 확장 (A960–A97F)</h2>
+    <div id="range1" class="unicode-container"></div>
+</div>
+<div>
+    <h2>자바어 (A980–A9DF)</h2>
+    <div id="range2" class="unicode-container"></div>
+</div>
+<div>
+    <h2>베트남 Daiwen (AA80–AADF)</h2>
+    <div id="range3" class="unicode-container"></div>
+</div>
+<div>
+    <h2>I Ching hexagram의 기호 (4DC0–4DFF)</h2>
+    <div id="range4" class="unicode-container"></div>
+</div>
+<div>
+    <h2>이순신 언어의 뿌리 (A490–A4CF)</h2>
+    <div id="range4" class="unicode-container"></div>
+</div>
+<div>
+    <h2>Lisu (A4D0–A4FF)</h2>
+    <div id="range5" class="unicode-container"></div>
+</div>
+<div>
+    <h2>이전 리수 (A500–A63F)</h2>
+    <div id="range6" class="unicode-container"></div>
+</div>
+<div>
+    <h2>키릴 확장-B (A640–A69F)</h2>
+    <div id="range7" class="unicode-container"></div>
+</div>
+<div>
+    <h2>톤 수정 편지 (A700–A71F)</h2>
+    <div id="range8" class="unicode-container"></div>
+</div>
+<div>
+    <h2>라틴 확장-D (A720–A7FF)</h2>
+    <div id="range9" class="unicode-container"></div>
+</div>
+<div>
+    <h2>인도 수치 (A830–A83F)</h2>
+    <div id="range10" class="unicode-container"></div>
+</div>
+<div>
+    <h2>원 총리 Pagba (A840–A87F)</h2>
+    <div id="range11" class="unicode-container"></div>
+</div>
+<div>
+    <h2>사우라 슈트라 (A880–A8DF)</h2>
+    <div id="range12" class="unicode-container"></div>
+</div>
+<div>
+    <h2>데바 나가리 확장 (A8E0–A8FF)</h2>
+    <div id="range13" class="unicode-container"></div>
+</div>
+<div>
+    <h2>카야 편지 (A900–A92F)</h2>
+    <div id="range14" class="unicode-container"></div>
+</div>
+<div>
+    <h2>Myanmar Extended-B (A9E0–A9FF)</h2>
+    <div id="range15" class="unicode-container"></div>
+</div>
+<div>
+    <h2>타타르어 (AA00–AA5F)</h2>
+    <div id="range16" class="unicode-container"></div>
+</div>
+<div>
+    <h2>확장 버마어 (AA60–AA7F)</h2>
+    <div id="range17" class="unicode-container"></div>
+</div>
+<div>
+    <h2>에티오피아 확장-A (AB00–AB2F)</h2>
+    <div id="range18" class="unicode-container"></div>
+</div>
+<div>
+    <h2>Latin Extended-E (AB30–AB6F)</h2>
+    <div id="range19" class="unicode-container"></div>
+</div>
+<div>
+    <h2>Cherokee Supplement (AB70–ABBF)</h2>
+    <div id="range20" class="unicode-container"></div>
+</div>
+<div>
+    <h2>마니 푸리 (ABC0–ABFF)</h2>
+    <div id="range21" class="unicode-container"></div>
+</div>
+<div>
+    <h2>이순신 언어의 뿌리 (A490–A4CF)</h2>
+    <div id="range4" class="unicode-container"></div>
+</div>
+<div>
+    <h2>밴드 CJK 문자와 달 (3200–32FF)</h2>
+    <div id="range22" class="unicode-container"></div>
+</div>
+<div>
+    <h2>CJK 문자 세트는 호환 (3300–33FF)</h2>
+    <div id="range23" class="unicode-container"></div>
+</div>
+<div>
+    <h2>가타카나 소리 나는대로 확장 (31F0–31FF)</h2>
+    <div id="range24" class="unicode-container"></div>
+</div>
+<div>
+    <h2>CJK는 스트로크 (31C0–31EF)</h2>
+    <div id="range25" class="unicode-container"></div>
+</div>
+<div>
+    <h2>확장 된 음성 알파벳 (31A0–31BF)</h2>
+    <div id="range26" class="unicode-container"></div>
+</div>
+<div>
+    <h2>상형 기호주의 사항 (3190–319F)</h2>
+    <div id="range27" class="unicode-container"></div>
+</div>
+<div>
+    <h2>한글 알파벳 호환 (3130–318F)</h2>
+    <div id="range28" class="unicode-container"></div>
+</div>
+<div>
+    <h2>이순신 음절 (A000–A48F)</h2>
+    <div id="range29" class="unicode-container"></div>
+</div>
+
+
+</body>
+</html>

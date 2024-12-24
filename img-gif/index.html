@@ -1,954 +1,1051 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>gif 애니메이션</title>
-    <link rel="icon" href="https://i.imgur.com/2MkyDCh.png" type="image/png">
-    <style>
-        /* 기존 스타일은 그대로 유지 */
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            height: 100vh;
-            margin: 0;
-            background-color: #fafafa;
-        }
-        .sidebar {
-            width: 400px;
-            padding: 20px;
-            border-right: 2px solid #ccc;
-            box-sizing: border-box;
-            overflow-y: auto;
-            background-color: #ffffff;
-        }
-        .main {
-            width: 65%;
-            padding: 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #fafafa;
-        }
-        .effect {
-            margin-bottom: 20px;
-        }
-        .effect-controls {
-            margin-left: 20px;
-            margin-top: 5px;
-            display: none;
-        }
-        .effect-controls label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: normal;
-        }
-        .effect-controls input[type="range"] {
-            width: 100%;
-        }
-        .preview {
-            border: 2px solid #ccc;
-            width: 600px;
-            height: 600px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            background-color: #ffffff;
-            overflow: hidden;
-            position: relative;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .preview img, .preview canvas {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-        .download-btn {
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 20px;
-            padding: 10px 20px;
-            margin: 20px 0; /* Adjust the margin as needed */
-            width: 300px; /* Fixed width */
-            height: 41px; /* Fixed height */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
-            font-weight: bold;
-            font-size: 20px;
-        }
-        .download-btn:hover:enabled {
-            background-color: #005BDD;
-            transform: translateY(2px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        .download-btn:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-        .progress-container {
-            width: 300px;
-            background-color: #e0e0e0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            display: none;
-        }
-        .progress-bar {
-            width: 0%;
-            height: 25px;
-            background-color: #4caf50;
-            border-radius: 5px;
-            text-align: center;
-            color: white;
-            line-height: 25px;
-            font-size: 14px;
-            transition: width 0.2s;
-        }
-        button {
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 20px;
-            padding: 10px 20px;
-            margin: 20px 0; /* Adjust the margin as needed */
-            width: 300px; /* Fixed width */
-            height: 41px; /* Fixed height */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
-            font-weight: bold;
-            font-size: 20px;
-        }
+  <meta charset="UTF-8">
+  <title>gif 애니메이션</title>
+  <link rel="icon" href="https://i.imgur.com/2MkyDCh.png" type="image/png">
+  <style>
+    /* ===== [크리스마스 분위기: body에 배경 + 스크롤 숨김] ===== */
+    body {
+      /* 크리스마스 느낌 배경 */
+      background: #fefefe no-repeat center center fixed;
+      background-size: cover;
+      position: relative;
+      overflow: hidden; /* 눈송이가 화면 밖을 넘어가도 스크롤바가 생기지 않도록 */
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+    }
 
-        button:hover {
-            background-color: #005BDD;
-            transform: translateY(2px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
+    .sidebar {
+      width: 400px;
+      padding: 20px;
+      border-right: 2px solid #ccc;
+      box-sizing: border-box;
+      overflow-y: auto;
+      background-color: #ffffff;
+    }
 
-        button:active {
-            background-color: #0026a3;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        /* 전체 파일 입력 요소 스타일 */
-        input[type="file"] {
-            font-size: 14px;
-        }
+    .main {
+      width: 65%;
+      padding: 20px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      /* 기존 배경이 #fafafa였지만, body에 이미 배경을 깔았으므로 필요하면 투명도 조정 */
+      background-color: rgba(255, 255, 255, 0.7); /* 희미한 흰색 배경 박스 느낌 */
+    }
 
-        /* 파일 선택 버튼 스타일 */
-        input[type="file"]::file-selector-button {
-            background-color: #007BFF;
-                    color: white;
-                    border: none;
-                    border-radius: 20px;
-                    padding: 10px 20px;
-                    margin: 20px 0; /* Adjust the margin as needed */
-                    width: 150px; /* Fixed width */
-                    height: 41px; /* Fixed height */
-                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-                    cursor: pointer;
-                    transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
-                    font-weight: bold;
-                    font-size: 16px;
-        }
+    .effect {
+      margin-bottom: 20px;
+    }
+    .effect-controls {
+      margin-left: 20px;
+      margin-top: 5px;
+      display: none;
+    }
+    .effect-controls label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: normal;
+    }
+    .effect-controls input[type="range"] {
+      width: 100%;
+    }
 
-        /* 버튼 호버 효과 */
-        input[type="file"]::file-selector-button:hover {
-            background-color: #005BDD;
-            transform: translateY(2px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
+    .preview {
+      border: 2px solid #ccc;
+      width: 600px;
+      height: 600px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      background-color: #ffffff;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .preview img, .preview canvas {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
 
-        h2 {
-            margin-top: 0;
-            color: #333333;
-        }
-        label {
-            font-weight: bold;
-            color: #555555;
-        }
-        .header-content {
-            display: flex;
-            align-items: center;
-            justify-content: start;
-            margin-bottom: 20px;
-            font-size: 30px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-        }
-    </style>
+    /* ===== [버튼: 빨간색 + position: relative (눈송이 앵커링)] ===== */
+    button,
+    .download-btn {
+      background-color: #c62828; /* 레드 */
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 20px;
+      margin: 20px 0;  /* 버튼 사이 여백 */
+      width: 300px;    /* 고정 폭 */
+      height: 41px;    /* 고정 높이 */
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+      font-weight: bold;
+      font-size: 20px;
+      position: relative;  /* 버튼에 눈송이 붙이기 위한 설정 */
+      overflow: visible;
+    }
+
+    /* 호버/비활성화 상태 */
+    button:hover:enabled,
+    .download-btn:hover:enabled {
+      background-color: #a21818;
+      transform: translateY(2px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    button:disabled,
+    .download-btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    button:active {
+      background-color: #670c0c;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    /* ===== [파일 선택 버튼도 동일한 스타일] ===== */
+    input[type="file"] {
+      font-size: 14px;
+    }
+    input[type="file"]::file-selector-button {
+      background-color: #c62828; /* 레드 */
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 20px;
+      margin: 20px 0;
+      width: 150px;
+      height: 41px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+      font-weight: bold;
+      font-size: 16px;
+      position: relative;
+      overflow: visible;
+    }
+    input[type="file"]::file-selector-button:hover {
+      background-color: #a21818;
+      transform: translateY(2px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .progress-container {
+      width: 300px;
+      background-color: #e0e0e0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      display: none;
+    }
+    .progress-bar {
+      width: 0%;
+      height: 25px;
+      background-color: #4caf50;
+      border-radius: 5px;
+      text-align: center;
+      color: white;
+      line-height: 25px;
+      font-size: 14px;
+      transition: width 0.2s;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #333333;
+    }
+    label {
+      font-weight: bold;
+      color: #555555;
+    }
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: start;
+      margin-bottom: 20px;
+      font-size: 30px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    .header-content img {
+      margin-right: 20px;
+    }
+
+    /* ===== 눈송이 기본 스타일 (JS로 움직이므로 위치는 transform으로 제어) ===== */
+    .snowflake {
+      position: fixed;       /* 화면을 기준으로 고정 */
+      top: 0; left: 0;
+      pointer-events: none;  /* 클릭 방지 */
+      z-index: 9999;
+      color: #8ed2ff;        /* 파란빛 눈 색상 */
+      font-size: 16px;
+      will-change: transform; /* 성능 최적화용 */
+    }
+
+    /* 버튼에 붙은(멈춘) 눈송이 스타일 */
+    .anchored-snowflake {
+      position: absolute;
+      pointer-events: none;
+      color: #8ed2ff;
+      line-height: 1;
+      white-space: nowrap;
+      user-select: none;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="sidebar">
-        <h2>효과 선택 및 조정</h2>
-        <!-- 효과 리스트 -->
-        <div class="effect">
-            <label>
-                <input type="checkbox" class="effect-checkbox" value="chromatic"> 발광 및 분리
-            </label>
-            <div class="effect-controls" id="controls-chromatic">
-                <label for="chromaticIntensity">강도:</label>
-                <input type="range" id="chromaticIntensity" min="0" max="50" value="10">
-            </div>
-        </div>
-        <div class="effect">
-            <label>
-                <input type="checkbox" class="effect-checkbox" value="rainbow"> 무지개
-            </label>
-            <div class="effect-controls" id="controls-rainbow">
-                <label for="rainbowSpeed">속도:</label>
-                <input type="range" id="rainbowSpeed" min="1" max="20" value="5">
-            </div>
-        </div>
-        <div class="effect">
-            <label>
-                <input type="checkbox" class="effect-checkbox" value="jitter"> 지터
-            </label>
-            <div class="effect-controls" id="controls-jitter">
-                <label for="jitterIntensity">강도:</label>
-                <input type="range" id="jitterIntensity" min="0" max="20" value="5">
-            </div>
-        </div>
-        <div class="effect">
-            <label>
-                <input type="checkbox" class="effect-checkbox" value="glitch"> 글리치
-            </label>
-            <div class="effect-controls" id="controls-glitch">
-                <label for="glitchIntensity">강도:</label>
-                <input type="range" id="glitchIntensity" min="0" max="30" value="10">
-            </div>
-        </div>
-        <div class="effect">
-            <label>
-                <input type="checkbox" class="effect-checkbox" value="rotation"> 회전
-            </label>
-            <div class="effect-controls" id="controls-rotation">
-                <label for="rotationSpeed">속도:</label>
-                <input type="range" id="rotationSpeed" min="0" max="10" value="2">
-            </div>
-        </div>
-        <div class="effect">
-            <label>
-                <input type="checkbox" class="effect-checkbox" value="wave"> 물결
-            </label>
-            <div class="effect-controls" id="controls-wave">
-                <label for="waveAmplitude">강도:</label>
-                <input type="range" id="waveAmplitude" min="0" max="50" value="10">
-                <label for="waveSpeed">속도:</label>
-                <input type="range" id="waveSpeed" min="1" max="20" value="5">
-                <label for="waveAnimationSpeed">애니메이션 재생 속도:</label>
-                <input type="range" id="waveAnimationSpeed" min="1" max="20" value="5">
-            </div>
-        </div>
-        <div class="effect">
-            <label>
-                <input type="checkbox" class="effect-checkbox" value="shake"> 돌리기
-            </label>
-            <div class="effect-controls" id="controls-shake">
-                <label for="shakeIntensity">강도:</label>
-                <input type="range" id="shakeIntensity" min="0" max="20" value="5">
-                <label for="shakeSpeed">속도:</label>
-                <input type="range" id="shakeSpeed" min="1" max="20" value="5">
-            </div>
-        </div>
-        <div class="effect">
-            <label>
-                <input type="checkbox" class="effect-checkbox" value="inversion"> 반전
-            </label>
-            <div class="effect-controls" id="controls-inversion">
-                <label for="inversionFrequency">주기 (프레임 수):</label>
-                <input type="range" id="inversionFrequency" min="1" max="30" value="15">
-                <label for="inversionDuration">반전 지속 시간 (프레임 수):</label>
-                <input type="range" id="inversionDuration" min="1" max="30" value="15">
-            </div>
-        </div>
-        <div class="effect">
-            <label>
-                <input type="checkbox" class="effect-checkbox" value="horizontalStretch"> 가로 늘리기
-            </label>
-            <div class="effect-controls" id="controls-horizontalStretch">
-                <label for="horizontalStretchAmount">늘림 정도:</label>
-                <input type="range" id="horizontalStretchAmount" min="1" max="3" step="0.1" value="1.2">
-                <label for="horizontalStretchSpeed">속도:</label>
-                <input type="range" id="horizontalStretchSpeed" min="1" max="20" value="5">
-            </div>
-        </div>
-        <div class="effect">
-            <label>
-                <input type="checkbox" class="effect-checkbox" value="verticalStretch"> 세로 늘리기
-            </label>
-            <div class="effect-controls" id="controls-verticalStretch">
-                <label for="verticalStretchAmount">늘림 정도:</label>
-                <input type="range" id="verticalStretchAmount" min="1" max="3" step="0.1" value="1.2">
-                <label for="verticalStretchSpeed">속도:</label>
-                <input type="range" id="verticalStretchSpeed" min="1" max="20" value="5">
-            </div>
-        </div>
-        <div class="effect">
-            <label>
-                <input type="checkbox" class="effect-checkbox" value="elastic"> 쫀득쫀득
-            </label>
-            <div class="effect-controls" id="controls-elastic">
-                <label for="elasticIntensity">강도:</label>
-                <input type="range" id="elasticIntensity" min="0.5" max="2" step="0.1" value="1.0">
-                <label for="elasticSpeed">속도:</label>
-                <input type="range" id="elasticSpeed" min="1" max="20" value="5">
-            </div>
-        </div>
-        <div class="effect">
-            <label>
-                <input type="checkbox" class="effect-checkbox" value="jump"> 점프
-            </label>
-            <div class="effect-controls" id="controls-jump">
-                <label for="jumpHeight">높이:</label>
-                <input type="range" id="jumpHeight" min="0" max="50" value="25">
-                <label for="jumpSpeed">속도:</label>
-                <input type="range" id="jumpSpeed" min="1" max="20" value="5">
-            </div>
-        </div>
-        <div class="effect">
-            <label>
-                <input type="checkbox" class="effect-checkbox" value="glow"> 발광
-            </label>
-            <div class="effect-controls" id="controls-glow">
-                <label for="glowFrequency">주기 (프레임 수):</label>
-                <input type="range" id="glowFrequency" min="1" max="30" value="15">
-                <label for="glowIntensity">강도:</label>
-                <input type="range" id="glowIntensity" min="0.1" max="1" step="0.1" value="0.5">
-            </div>
-        </div>
-        <div class="effect">
-            <label>
-                <input type="checkbox" class="effect-checkbox" value="pixelate"> 픽셀화
-            </label>
-            <div class="effect-controls" id="controls-pixelate">
-                <label for="pixelateSize">픽셀 크기:</label>
-                <input type="range" id="pixelateSize" min="1" max="50" value="10">
-            </div>
-        </div>
-        <div class="effect">
-            <label>
-                <input type="checkbox" class="effect-checkbox" value="droplet"> 물방울
-            </label>
-            <div class="effect-controls" id="controls-droplet">
-                <label for="dropletCount">방울 개수:</label>
-                <input type="range" id="dropletCount" min="1" max="20" value="5">
-                <label for="dropletSize">방울 크기:</label>
-                <input type="range" id="dropletSize" min="1" max="20" value="5">
-                <label for="dropletSpeed">방울 속도:</label>
-                <input type="range" id="dropletSpeed" min="1" max="10" value="3">
-            </div>
-        </div>
-        <div class="effect">
-            <label>
-                <input type="checkbox" class="effect-checkbox" value="flag"> 깃발
-            </label>
-            <div class="effect-controls" id="controls-flag">
-                <label for="flagAmplitude">진폭:</label>
-                <input type="range" id="flagAmplitude" min="0" max="50" value="10">
-                <label for="flagFrequency">주파수:</label>
-                <input type="range" id="flagFrequency" min="1" max="20" value="5">
-                <label for="flagAnimationSpeed">애니메이션 재생 속도:</label>
-                <input type="range" id="flagAnimationSpeed" min="1" max="20" value="5">
-            </div>
-        </div>
-
-        <button id="applyEffect">효과 적용 및 GIF 생성</button>
+  <div class="sidebar">
+    <h2>효과 선택 및 조정</h2>
+    <!-- 효과 리스트 (원본 그대로) -->
+    <div class="effect">
+      <label>
+        <input type="checkbox" class="effect-checkbox" value="chromatic"> 발광 및 분리
+      </label>
+      <div class="effect-controls" id="controls-chromatic">
+        <label for="chromaticIntensity">강도:</label>
+        <input type="range" id="chromaticIntensity" min="0" max="50" value="10">
+      </div>
     </div>
-
-    <div class="main">
-        <div class="header-content">
-            <img src="https://i.imgur.com/2MkyDCh.png" alt="Logo" style="width: 120px; height: auto;">
-            <h1>gif 애니메이션</h1>
-        </div>
-        <div class="preview" id="preview">
-            <span>이미지를 업로드하세요</span>
-        </div>
-        <div class="progress-container" id="progressContainer">
-            <div class="progress-bar" id="progressBar">0%</div>
-        </div>
-        <input type="file" id="imageUpload" accept="image/*">
-        <a id="downloadLink" href="#" download="output.gif">
-            <button class="download-btn" disabled>다운로드</button>
-        </a>
+    <div class="effect">
+      <label>
+        <input type="checkbox" class="effect-checkbox" value="rainbow"> 무지개
+      </label>
+      <div class="effect-controls" id="controls-rainbow">
+        <label for="rainbowSpeed">속도:</label>
+        <input type="range" id="rainbowSpeed" min="1" max="20" value="5">
+      </div>
     </div>
+    <div class="effect">
+      <label>
+        <input type="checkbox" class="effect-checkbox" value="jitter"> 지터
+      </label>
+      <div class="effect-controls" id="controls-jitter">
+        <label for="jitterIntensity">강도:</label>
+        <input type="range" id="jitterIntensity" min="0" max="20" value="5">
+      </div>
+    </div>
+    <div class="effect">
+      <label>
+        <input type="checkbox" class="effect-checkbox" value="glitch"> 글리치
+      </label>
+      <div class="effect-controls" id="controls-glitch">
+        <label for="glitchIntensity">강도:</label>
+        <input type="range" id="glitchIntensity" min="0" max="30" value="10">
+      </div>
+    </div>
+    <div class="effect">
+      <label>
+        <input type="checkbox" class="effect-checkbox" value="rotation"> 회전
+      </label>
+      <div class="effect-controls" id="controls-rotation">
+        <label for="rotationSpeed">속도:</label>
+        <input type="range" id="rotationSpeed" min="0" max="10" value="2">
+      </div>
+    </div>
+    <div class="effect">
+      <label>
+        <input type="checkbox" class="effect-checkbox" value="wave"> 물결
+      </label>
+      <div class="effect-controls" id="controls-wave">
+        <label for="waveAmplitude">강도:</label>
+        <input type="range" id="waveAmplitude" min="0" max="50" value="10">
+        <label for="waveSpeed">속도:</label>
+        <input type="range" id="waveSpeed" min="1" max="20" value="5">
+        <label for="waveAnimationSpeed">애니메이션 재생 속도:</label>
+        <input type="range" id="waveAnimationSpeed" min="1" max="20" value="5">
+      </div>
+    </div>
+    <div class="effect">
+      <label>
+        <input type="checkbox" class="effect-checkbox" value="shake"> 돌리기
+      </label>
+      <div class="effect-controls" id="controls-shake">
+        <label for="shakeIntensity">강도:</label>
+        <input type="range" id="shakeIntensity" min="0" max="20" value="5">
+        <label for="shakeSpeed">속도:</label>
+        <input type="range" id="shakeSpeed" min="1" max="20" value="5">
+      </div>
+    </div>
+    <div class="effect">
+      <label>
+        <input type="checkbox" class="effect-checkbox" value="inversion"> 반전
+      </label>
+      <div class="effect-controls" id="controls-inversion">
+        <label for="inversionFrequency">주기 (프레임 수):</label>
+        <input type="range" id="inversionFrequency" min="1" max="30" value="15">
+        <label for="inversionDuration">반전 지속 시간 (프레임 수):</label>
+        <input type="range" id="inversionDuration" min="1" max="30" value="15">
+      </div>
+    </div>
+    <div class="effect">
+      <label>
+        <input type="checkbox" class="effect-checkbox" value="horizontalStretch"> 가로 늘리기
+      </label>
+      <div class="effect-controls" id="controls-horizontalStretch">
+        <label for="horizontalStretchAmount">늘림 정도:</label>
+        <input type="range" id="horizontalStretchAmount" min="1" max="3" step="0.1" value="1.2">
+        <label for="horizontalStretchSpeed">속도:</label>
+        <input type="range" id="horizontalStretchSpeed" min="1" max="20" value="5">
+      </div>
+    </div>
+    <div class="effect">
+      <label>
+        <input type="checkbox" class="effect-checkbox" value="verticalStretch"> 세로 늘리기
+      </label>
+      <div class="effect-controls" id="controls-verticalStretch">
+        <label for="verticalStretchAmount">늘림 정도:</label>
+        <input type="range" id="verticalStretchAmount" min="1" max="3" step="0.1" value="1.2">
+        <label for="verticalStretchSpeed">속도:</label>
+        <input type="range" id="verticalStretchSpeed" min="1" max="20" value="5">
+      </div>
+    </div>
+    <div class="effect">
+      <label>
+        <input type="checkbox" class="effect-checkbox" value="elastic"> 쫀득쫀득
+      </label>
+      <div class="effect-controls" id="controls-elastic">
+        <label for="elasticIntensity">강도:</label>
+        <input type="range" id="elasticIntensity" min="0.5" max="2" step="0.1" value="1.0">
+        <label for="elasticSpeed">속도:</label>
+        <input type="range" id="elasticSpeed" min="1" max="20" value="5">
+      </div>
+    </div>
+    <div class="effect">
+      <label>
+        <input type="checkbox" class="effect-checkbox" value="jump"> 점프
+      </label>
+      <div class="effect-controls" id="controls-jump">
+        <label for="jumpHeight">높이:</label>
+        <input type="range" id="jumpHeight" min="0" max="50" value="25">
+        <label for="jumpSpeed">속도:</label>
+        <input type="range" id="jumpSpeed" min="1" max="20" value="5">
+      </div>
+    </div>
+    <div class="effect">
+      <label>
+        <input type="checkbox" class="effect-checkbox" value="glow"> 발광
+      </label>
+      <div class="effect-controls" id="controls-glow">
+        <label for="glowFrequency">주기 (프레임 수):</label>
+        <input type="range" id="glowFrequency" min="1" max="30" value="15">
+        <label for="glowIntensity">강도:</label>
+        <input type="range" id="glowIntensity" min="0.1" max="1" step="0.1" value="0.5">
+      </div>
+    </div>
+    <div class="effect">
+      <label>
+        <input type="checkbox" class="effect-checkbox" value="pixelate"> 픽셀화
+      </label>
+      <div class="effect-controls" id="controls-pixelate">
+        <label for="pixelateSize">픽셀 크기:</label>
+        <input type="range" id="pixelateSize" min="1" max="50" value="10">
+      </div>
+    </div>
+    <div class="effect">
+      <label>
+        <input type="checkbox" class="effect-checkbox" value="droplet"> 물방울
+      </label>
+      <div class="effect-controls" id="controls-droplet">
+        <label for="dropletCount">방울 개수:</label>
+        <input type="range" id="dropletCount" min="1" max="20" value="5">
+        <label for="dropletSize">방울 크기:</label>
+        <input type="range" id="dropletSize" min="1" max="20" value="5">
+        <label for="dropletSpeed">방울 속도:</label>
+        <input type="range" id="dropletSpeed" min="1" max="10" value="3">
+      </div>
+    </div>
+    <div class="effect">
+      <label>
+        <input type="checkbox" class="effect-checkbox" value="flag"> 깃발
+      </label>
+      <div class="effect-controls" id="controls-flag">
+        <label for="flagAmplitude">진폭:</label>
+        <input type="range" id="flagAmplitude" min="0" max="50" value="10">
+        <label for="flagFrequency">주파수:</label>
+        <input type="range" id="flagFrequency" min="1" max="20" value="5">
+        <label for="flagAnimationSpeed">애니메이션 재생 속도:</label>
+        <input type="range" id="flagAnimationSpeed" min="1" max="20" value="5">
+      </div>
+    </div>
+    <button id="applyEffect">효과 적용 및 GIF 생성</button>
+  </div>
 
-    <!-- gif.js 라이브러리 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
-    <script>
-        const imageUpload = document.getElementById('imageUpload');
-        const preview = document.getElementById('preview');
-        const applyEffectBtn = document.getElementById('applyEffect');
-        const downloadLink = document.getElementById('downloadLink');
-        const downloadBtn = document.querySelector('.download-btn');
-        const effectCheckboxes = document.querySelectorAll('.effect-checkbox');
+  <div class="main">
+    <div class="header-content">
+      <img src="https://i.imgur.com/2MkyDCh.png" alt="Logo" style="width: 120px; height: auto;">
+      <h1>gif 애니메이션</h1>
+    </div>
+    <div class="preview" id="preview">
+      <span>이미지를 업로드하세요</span>
+    </div>
+    <div class="progress-container" id="progressContainer">
+      <div class="progress-bar" id="progressBar">0%</div>
+    </div>
+    <input type="file" id="imageUpload" accept="image/*">
+    <a id="downloadLink" href="#" download="output.gif">
+      <button class="download-btn" disabled>다운로드</button>
+    </a>
+  </div>
 
-        const progressContainer = document.getElementById('progressContainer');
-        const progressBar = document.getElementById('progressBar');
+  <!-- gif.js 라이브러리 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
 
-        let originalImage = new Image();
-        let imageLoaded = false;
+  <!-- ===== [JS] 효과 로직 + GIF 생성 ===== -->
+  <script>
+    const imageUpload = document.getElementById('imageUpload');
+    const preview = document.getElementById('preview');
+    const applyEffectBtn = document.getElementById('applyEffect');
+    const downloadLink = document.getElementById('downloadLink');
+    const downloadBtn = document.querySelector('.download-btn');
+    const effectCheckboxes = document.querySelectorAll('.effect-checkbox');
 
-        // 체크박스 변경 시 조정 컨트롤 표시/숨기기
-        effectCheckboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', () => {
-                const controlsDiv = document.getElementById(`controls-${checkbox.value}`);
-                if (checkbox.checked) {
-                    controlsDiv.style.display = 'block';
-                } else {
-                    controlsDiv.style.display = 'none';
-                }
-            });
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+
+    let originalImage = new Image();
+    let imageLoaded = false;
+
+    // 체크박스 변경 시 조정 컨트롤 표시/숨기기
+    effectCheckboxes.forEach(checkbox => {
+      checkbox.addEventListener('change', () => {
+        const controlsDiv = document.getElementById(`controls-${checkbox.value}`);
+        if (checkbox.checked) {
+          controlsDiv.style.display = 'block';
+        } else {
+          controlsDiv.style.display = 'none';
+        }
+      });
+    });
+
+    // 이미지 업로드 시 미리보기
+    imageUpload.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        originalImage = new Image();
+        originalImage.src = event.target.result;
+        originalImage.onload = () => {
+          preview.innerHTML = '';
+          const img = originalImage.cloneNode();
+          img.style.maxWidth = '100%';
+          img.style.maxHeight = '100%';
+          preview.appendChild(img);
+          imageLoaded = true;
+        };
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Worker 스크립트를 Blob으로 임베딩 (gif.worker.js)
+    const workerBlob = new Blob([`(${function() {
+      importScripts('https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js');
+    }.toString()})()`], { type: 'application/javascript' });
+    const workerURL = URL.createObjectURL(workerBlob);
+
+    // 효과 적용 및 GIF 생성
+    applyEffectBtn.addEventListener('click', () => {
+      if (!imageLoaded) {
+        alert('이미지를 먼저 업로드해주세요.');
+        return;
+      }
+
+      const selectedEffects = Array.from(effectCheckboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value);
+
+      if (selectedEffects.length === 0) {
+        alert('적용할 효과를 하나 이상 선택해주세요.');
+        return;
+      }
+
+      const params = getAllEffectParams(selectedEffects);
+
+      // GIF 설정
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        workerScript: workerURL,
+        width: originalImage.width,
+        height: originalImage.height
+      });
+
+      const totalFrames = 60; // 3초 * 20fps
+      const duration = 3000;  // 3초
+      const frameDelay = duration / totalFrames;
+
+      // 진행 바 표시
+      progressContainer.style.display = 'block';
+      progressBar.style.width = '0%';
+      progressBar.textContent = '0%';
+      downloadBtn.disabled = true;
+
+      gif.on('progress', function(p) {
+        const percent = Math.round(p * 100);
+        progressBar.style.width = `${percent}%`;
+        progressBar.textContent = `${percent}%`;
+      });
+
+      gif.on('finished', function(blob) {
+        const url = URL.createObjectURL(blob);
+        preview.innerHTML = `<img src="${url}" alt="GIF 미리보기" width="600" height="600">`;
+        downloadLink.href = url;
+        downloadBtn.disabled = false;
+        // 진행 바 숨기기
+        progressContainer.style.display = 'none';
+      });
+
+      // 오프스크린 캔버스 준비
+      const offCanvas = document.createElement('canvas');
+      offCanvas.width = originalImage.width;
+      offCanvas.height = originalImage.height;
+      const offCtx = offCanvas.getContext('2d');
+
+      // 각 효과의 transform 함수들
+      const transformations = selectedEffects.map(effect => {
+        return getTransformationFunction(effect, params[effect], totalFrames);
+      });
+
+      for (let i = 0; i < totalFrames; i++) {
+        offCtx.clearRect(0, 0, offCanvas.width, offCanvas.height);
+        offCtx.drawImage(originalImage, 0, 0, offCanvas.width, offCanvas.height);
+
+        // 프레임 별 임시 캔버스에 복사
+        const frameCanvas = document.createElement('canvas');
+        frameCanvas.width = offCanvas.width;
+        frameCanvas.height = offCanvas.height;
+        const frameCtx = frameCanvas.getContext('2d');
+        frameCtx.drawImage(offCanvas, 0, 0);
+
+        // 모든 선택된 효과 적용
+        transformations.forEach(transform => {
+          transform(frameCtx, i);
         });
 
-        // 이미지 업로드 시 미리보기 설정
-        imageUpload.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+        gif.addFrame(frameCtx, { copy: true, delay: frameDelay });
+      }
 
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                originalImage = new Image();
-                originalImage.src = event.target.result;
-                originalImage.onload = () => {
-                    preview.innerHTML = '';
-                    const img = originalImage.cloneNode();
-                    img.style.maxWidth = '100%';
-                    img.style.maxHeight = '100%';
-                    preview.appendChild(img);
-                    imageLoaded = true;
-                }
-            }
-            reader.readAsDataURL(file);
+      gif.render();
+    });
+
+    // 모든 효과 파라미터 가져오기
+    function getAllEffectParams(effects) {
+      const allParams = {};
+      effects.forEach(effect => {
+        allParams[effect] = {};
+        const controlsDiv = document.getElementById(`controls-${effect}`);
+        const inputs = controlsDiv.querySelectorAll('input');
+        inputs.forEach(input => {
+          allParams[effect][input.id] = parseFloat(input.value);
         });
+      });
+      return allParams;
+    }
 
-        // Worker 스크립트를 Blob으로 임베딩
-        const workerBlob = new Blob([`(${function() {
-            // gif.worker.js의 내용 (최소화된 버전)
-            importScripts('https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js');
-        }.toString()})()`], { type: 'application/javascript' });
-        const workerURL = URL.createObjectURL(workerBlob);
+    // 효과별 함수 매핑
+    function getTransformationFunction(effect, params, totalFrames) {
+      switch(effect) {
+        case 'chromatic':
+          return (ctx, frame) => applyChromatic(ctx, frame, totalFrames, params);
+        case 'rainbow':
+          return (ctx, frame) => applyRainbow(ctx, frame, totalFrames, params);
+        case 'jitter':
+          return (ctx, frame) => applyJitter(ctx, frame, totalFrames, params);
+        case 'glitch':
+          return (ctx, frame) => applyGlitch(ctx, frame, totalFrames, params);
+        case 'rotation':
+          return (ctx, frame) => applyRotation(ctx, frame, totalFrames, params);
+        case 'wave':
+          return (ctx, frame) => applyWave(ctx, frame, totalFrames, params);
+        case 'shake':
+          return (ctx, frame) => applyShake(ctx, frame, totalFrames, params);
+        case 'inversion':
+          return (ctx, frame) => applyInversion(ctx, frame, totalFrames, params);
+        case 'horizontalStretch':
+          return (ctx, frame) => applyHorizontalStretch(ctx, frame, totalFrames, params);
+        case 'verticalStretch':
+          return (ctx, frame) => applyVerticalStretch(ctx, frame, totalFrames, params);
+        case 'elastic':
+          return (ctx, frame) => applyElastic(ctx, frame, totalFrames, params);
+        case 'jump':
+          return (ctx, frame) => applyJump(ctx, frame, totalFrames, params);
+        case 'glow':
+          return (ctx, frame) => applyGlow(ctx, frame, totalFrames, params);
+        case 'pixelate':
+          return (ctx, frame) => applyPixelate(ctx, frame, totalFrames, params);
+        case 'droplet':
+          return (ctx, frame) => applyDroplet(ctx, frame, totalFrames, params);
+        case 'flag':
+          return (ctx, frame) => applyFlag(ctx, frame, totalFrames, params);
+        default:
+          return () => {};
+      }
+    }
 
-        // 효과 적용 및 GIF 생성
-        applyEffectBtn.addEventListener('click', () => {
-            if (!imageLoaded) {
-                alert('이미지를 먼저 업로드해주세요.');
-                return;
-            }
+    /* =========================
+       [각 효과 적용 함수들]
+       원본 코드를 그대로 복사
+       ========================= */
 
-            const selectedEffects = Array.from(effectCheckboxes)
-                                        .filter(cb => cb.checked)
-                                        .map(cb => cb.value);
-            if (selectedEffects.length === 0) {
-                alert('적용할 효과를 하나 이상 선택해주세요.');
-                return;
-            }
-            const params = getAllEffectParams(selectedEffects);
+    // 1. 발광 및 분리(Chromatic) 효과
+    function applyChromatic(ctx, frame, totalFrames, params) {
+      const intensity = params.chromaticIntensity;
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCanvas.width = ctx.canvas.width;
+      tempCanvas.height = ctx.canvas.height;
+      tempCtx.drawImage(ctx.canvas, 0, 0);
 
-            // GIF 설정
-            const gif = new GIF({
-                workers: 2,
-                quality: 10,
-                workerScript: workerURL, // 임베디드 Worker URL 사용
-                width: originalImage.width,
-                height: originalImage.height
-            });
+      // Red 채널 이동
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.drawImage(
+        tempCanvas,
+        intensity * Math.sin((frame / totalFrames) * Math.PI * 2),
+        0,
+        ctx.canvas.width,
+        ctx.canvas.height
+      );
 
-            const totalFrames = 60; // 3초 * 20fps
-            const duration = 3000; // 3초
-            const frameDelay = duration / totalFrames;
+      // Green 채널 이동
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.drawImage(
+        tempCanvas,
+        -intensity * Math.sin((frame / totalFrames) * Math.PI * 2),
+        0,
+        ctx.canvas.width,
+        ctx.canvas.height
+      );
 
-            // 진행 바 표시
-            progressContainer.style.display = 'block';
-            progressBar.style.width = '0%';
-            progressBar.textContent = '0%';
-            downloadBtn.disabled = true;
+      // Blue 채널
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.drawImage(tempCanvas, 0, 0, ctx.canvas.width, ctx.canvas.height);
 
-            gif.on('progress', function(p) {
-                const percent = Math.round(p * 100);
-                progressBar.style.width = `${percent}%`;
-                progressBar.textContent = `${percent}%`;
-            });
+      // 무지개 오버레이
+      ctx.globalCompositeOperation = 'overlay';
+      const gradient = ctx.createLinearGradient(0, 0, ctx.canvas.width, ctx.canvas.height);
+      gradient.addColorStop(0, 'rgba(255,0,0,0.1)');
+      gradient.addColorStop(0.16, 'rgba(255,127,0,0.1)');
+      gradient.addColorStop(0.33, 'rgba(255,255,0,0.1)');
+      gradient.addColorStop(0.5, 'rgba(0,255,0,0.1)');
+      gradient.addColorStop(0.66, 'rgba(0,0,255,0.1)');
+      gradient.addColorStop(0.83, 'rgba(75,0,130,0.1)');
+      gradient.addColorStop(1, 'rgba(148,0,211,0.1)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-            gif.on('finished', function(blob) {
-                const url = URL.createObjectURL(blob);
-                preview.innerHTML = `<img src="${url}" alt="GIF 미리보기" width="600" height="600">`;
-                downloadLink.href = url;
-                downloadBtn.disabled = false;
-                // 진행 바 숨기기
-                progressContainer.style.display = 'none';
-            });
+      ctx.globalAlpha = 1.0;
+      ctx.globalCompositeOperation = 'source-over';
+    }
 
-            // Create an offscreen canvas for processing
-            const offCanvas = document.createElement('canvas');
-            offCanvas.width = originalImage.width;
-            offCanvas.height = originalImage.height;
-            const offCtx = offCanvas.getContext('2d');
+    // 2. 무지개(Rainbow) 효과
+    function applyRainbow(ctx, frame, totalFrames, params) {
+      const speed = params.rainbowSpeed;
+      const hueShift = (frame / totalFrames) * 360 * speed;
 
-            // Precompute transformations that depend only on frame
-            const transformations = selectedEffects.map(effect => getTransformationFunction(effect, params[effect], totalFrames));
+      const gradient = ctx.createLinearGradient(0, 0, ctx.canvas.width, ctx.canvas.height);
+      for (let i = 0; i <= 360; i += 60) {
+        const hue = (i + hueShift) % 360;
+        gradient.addColorStop(i / 360, `hsl(${hue}, 100%, 50%)`);
+      }
 
-            for (let i = 0; i < totalFrames; i++) {
-                offCtx.clearRect(0, 0, offCanvas.width, offCanvas.height);
-                offCtx.drawImage(originalImage, 0, 0, offCanvas.width, offCanvas.height);
+      ctx.globalCompositeOperation = 'overlay';
+      ctx.fillStyle = gradient;
+      ctx.globalAlpha = 0.5;
+      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.globalAlpha = 1.0;
+      ctx.globalCompositeOperation = 'source-over';
+    }
 
-                // Create a separate canvas to apply effects without altering the original canvas state
-                const frameCanvas = document.createElement('canvas');
-                frameCanvas.width = offCanvas.width;
-                frameCanvas.height = offCanvas.height;
-                const frameCtx = frameCanvas.getContext('2d');
-                frameCtx.drawImage(offCanvas, 0, 0);
+    // 3. 지터(Jitter) 효과
+    function applyJitter(ctx, frame, totalFrames, params) {
+      const intensity = params.jitterIntensity;
+      const dx = (Math.random() - 0.5) * intensity;
+      const dy = (Math.random() - 0.5) * intensity;
+      ctx.translate(dx, dy);
+      ctx.drawImage(ctx.canvas, 0, 0);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
 
-                // 모든 선택된 효과 적용
-                transformations.forEach(transform => {
-                    transform(frameCtx, i);
-                });
+    // 4. 글리치(Glitch) 효과
+    function applyGlitch(ctx, frame, totalFrames, params) {
+      const intensity = params.glitchIntensity; 
+      const slices = Math.floor(Math.random() * 5) + 3; 
+      const sliceHeight = Math.floor(ctx.canvas.height / slices);
 
-                gif.addFrame(frameCtx, {copy: true, delay: frameDelay});
-            }
+      for (let i = 0; i < slices; i++) {
+        const color = Math.random() > 0.5 ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 0, 255, 0.2)';
+        const y = i * sliceHeight;
+        const height = (i === slices - 1) ? (ctx.canvas.height - y) : sliceHeight;
+        const shiftX = (Math.random() - 0.5) * intensity;
 
-            gif.render();
-        });
+        const slice = ctx.getImageData(0, y, ctx.canvas.width, height);
 
-        // 효과별 파라미터 가져오기
-        function getAllEffectParams(effects) {
-            const allParams = {};
-            effects.forEach(effect => {
-                allParams[effect] = {};
-                const controlsDiv = document.getElementById(`controls-${effect}`);
-                const inputs = controlsDiv.querySelectorAll('input');
-                inputs.forEach(input => {
-                    allParams[effect][input.id] = parseFloat(input.value);
-                });
-            });
-            return allParams;
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = ctx.canvas.width;
+        tempCanvas.height = height;
+        const tempCtx = tempCanvas.getContext('2d');
+
+        tempCtx.putImageData(slice, 0, 0);
+
+        tempCtx.fillStyle = color;
+        tempCtx.globalCompositeOperation = 'source-atop';
+        tempCtx.fillRect(0, 0, tempCanvas.width, height);
+
+        ctx.drawImage(tempCanvas, shiftX, y);
+      }
+    }
+
+    // 5. 회전(Rotation) 효과
+    function applyRotation(ctx, frame, totalFrames, params) {
+      const speed = params.rotationSpeed;
+      const angle = (speed * 2 * Math.PI * frame) / totalFrames;
+      const centerX = ctx.canvas.width / 2;
+      const centerY = ctx.canvas.height / 2;
+
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCanvas.width = ctx.canvas.width;
+      tempCanvas.height = ctx.canvas.height;
+      tempCtx.drawImage(ctx.canvas, 0, 0);
+
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(angle);
+      ctx.drawImage(tempCanvas, -centerX, -centerY);
+      ctx.restore();
+    }
+
+    // 6. 물결(Wave) 효과
+    function applyWave(ctx, frame, totalFrames, params) {
+      const amplitude = params.waveAmplitude;
+      const speed = params.waveSpeed;
+      const animationSpeed = params.waveAnimationSpeed;
+      const frequency = 2 * Math.PI * speed;
+
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCanvas.width = ctx.canvas.width;
+      tempCanvas.height = ctx.canvas.height;
+
+      for (let y = 0; y < ctx.canvas.height; y++) {
+        const shift = amplitude * Math.sin(
+          (y / ctx.canvas.height) * frequency + (frame / totalFrames) * 2 * Math.PI * animationSpeed
+        );
+        tempCtx.drawImage(ctx.canvas, shift, y, ctx.canvas.width, 1, 0, y, ctx.canvas.width, 1);
+      }
+
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.drawImage(tempCanvas, 0, 0);
+    }
+
+    // 7. 돌리기(Shake) 효과
+    function applyShake(ctx, frame, totalFrames, params) {
+      const intensity = params.shakeIntensity;
+      const speed = params.shakeSpeed;
+      const dx = intensity * Math.sin((frame / totalFrames) * 2 * Math.PI * speed);
+      const dy = intensity * Math.cos((frame / totalFrames) * 2 * Math.PI * speed);
+      ctx.translate(dx, dy);
+      ctx.drawImage(ctx.canvas, 0, 0);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+
+    // 8. 반전(Inversion) 효과
+    function applyInversion(ctx, frame, totalFrames, params) {
+      const frequency = params.inversionFrequency;
+      const duration = params.inversionDuration;
+
+      const cycle = frequency + duration;
+      const currentCycle = frame % cycle;
+
+      if (currentCycle < duration) {
+        const imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+        const data = imageData.data;
+        for (let i = 0; i < data.length; i += 4) {
+          data[i] = 255 - data[i];
+          data[i + 1] = 255 - data[i + 1];
+          data[i + 2] = 255 - data[i + 2];
+        }
+        ctx.putImageData(imageData, 0, 0);
+      }
+    }
+
+    // 9. 가로 늘리기(Horizontal Stretch) 효과
+    function applyHorizontalStretch(ctx, frame, totalFrames, params) {
+      const amount = params.horizontalStretchAmount;
+      const speed = params.horizontalStretchSpeed;
+      const scale = 1 + (amount - 1) * Math.sin((frame / totalFrames) * 2 * Math.PI * speed);
+      const centerX = ctx.canvas.width / 2;
+
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCanvas.width = ctx.canvas.width;
+      tempCanvas.height = ctx.canvas.height;
+      tempCtx.drawImage(ctx.canvas, 0, 0);
+
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.save();
+      ctx.translate(centerX, 0);
+      ctx.scale(scale, 1);
+      ctx.drawImage(tempCanvas, -centerX, 0);
+      ctx.restore();
+    }
+
+    // 10. 세로 늘리기(Vertical Stretch) 효과
+    function applyVerticalStretch(ctx, frame, totalFrames, params) {
+      const amount = params.verticalStretchAmount;
+      const speed = params.verticalStretchSpeed;
+      const scale = 1 + (amount - 1) * Math.cos((frame / totalFrames) * 2 * Math.PI * speed);
+      const centerY = ctx.canvas.height / 2;
+
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCanvas.width = ctx.canvas.width;
+      tempCanvas.height = ctx.canvas.height;
+      tempCtx.drawImage(ctx.canvas, 0, 0);
+
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.save();
+      ctx.translate(0, centerY);
+      ctx.scale(1, scale);
+      ctx.drawImage(tempCanvas, 0, -centerY);
+      ctx.restore();
+    }
+
+    // 11. 쫀득쫀득(Elastic) 효과
+    function applyElastic(ctx, frame, totalFrames, params) {
+      const intensity = params.elasticIntensity;
+      const speed = params.elasticSpeed;
+      const scale = 1 + intensity * Math.sin((frame / totalFrames) * 2 * Math.PI * speed) * Math.exp(-frame / totalFrames);
+      const centerX = ctx.canvas.width / 2;
+      const centerY = ctx.canvas.height / 2;
+
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCanvas.width = ctx.canvas.width;
+      tempCanvas.height = ctx.canvas.height;
+      tempCtx.drawImage(ctx.canvas, 0, 0);
+
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.scale(scale, scale);
+      ctx.drawImage(tempCanvas, -centerX, -centerY);
+      ctx.restore();
+    }
+
+    // 12. 점프(Jump) 효과
+    function applyJump(ctx, frame, totalFrames, params) {
+      const height = params.jumpHeight;
+      const speed = params.jumpSpeed;
+      const dy = height * Math.abs(Math.sin((frame / totalFrames) * Math.PI * speed));
+      ctx.translate(0, -dy);
+      ctx.drawImage(ctx.canvas, 0, 0);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+
+    // 13. 발광(Glow) 효과
+    function applyGlow(ctx, frame, totalFrames, params) {
+      const frequency = params.glowFrequency;
+      const intensity = params.glowIntensity;
+
+      const cycle = frequency * 2;
+      const currentCycle = frame % cycle;
+
+      const alpha = currentCycle < frequency 
+        ? (currentCycle / frequency) * intensity
+        : ((cycle - currentCycle) / frequency) * intensity;
+
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    // 14. 픽셀화(Pixelate) 효과
+    function applyPixelate(ctx, frame, totalFrames, params) {
+      const pixelSize = params.pixelateSize;
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCanvas.width = Math.ceil(ctx.canvas.width / pixelSize);
+      tempCanvas.height = Math.ceil(ctx.canvas.height / pixelSize);
+
+      tempCtx.drawImage(ctx.canvas, 0, 0, tempCanvas.width, tempCanvas.height);
+      ctx.imageSmoothingEnabled = false;
+
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 0, 0, ctx.canvas.width, ctx.canvas.height);
+
+      ctx.imageSmoothingEnabled = true;
+    }
+
+    // 15. 물방울(Droplet) 효과
+    function applyDroplet(ctx, frame, totalFrames, params) {
+      const count = params.dropletCount;
+      const size = params.dropletSize;
+      const speed = params.dropletSpeed;
+
+      ctx.save();
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      for (let i = 0; i < count; i++) {
+        const x = Math.random() * ctx.canvas.width;
+        const y = (frame * speed + Math.random() * ctx.canvas.height) % ctx.canvas.height;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // 16. 깃발(Flag) 효과
+    function applyFlag(ctx, frame, totalFrames, params) {
+      const amplitude = params.flagAmplitude;
+      const frequency = params.flagFrequency;
+      const animationSpeed = params.flagAnimationSpeed;
+
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCanvas.width = ctx.canvas.width;
+      tempCanvas.height = ctx.canvas.height;
+
+      for (let x = 0; x < ctx.canvas.width; x++) {
+        const shift = amplitude * Math.sin(
+          (x / ctx.canvas.width) * 2 * Math.PI * frequency +
+          (frame / totalFrames) * 2 * Math.PI * animationSpeed
+        );
+        tempCtx.drawImage(ctx.canvas, x, 0, 1, ctx.canvas.height, x, shift, 1, ctx.canvas.height);
+      }
+
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.drawImage(tempCanvas, 0, 0);
+    }
+  </script>
+
+  <!-- ===== [JS] 눈송이 낙하 ===== -->
+  <script>
+    /**
+     * - 일정 간격으로 "❄" 눈송이 생성 (setInterval)
+     * - requestAnimationFrame으로 x,y 좌표 갱신 (아래로 이동)
+     * - 버튼과 충돌 시 해당 버튼 위에 붙은 눈송이(.anchored-snowflake)로 변경
+     * - 화면 아래 벗어나면 제거
+     */
+    const SNOWFLAKE_COUNT = 200;   // 동시에 화면에 존재 가능한 최대 눈송이 수
+    const SPAWN_INTERVAL = 400;    // 눈송이 생성 주기 (ms)
+    const FALL_SPEED_MIN = 1;      // 눈송이 낙하 최소 속도
+    const FALL_SPEED_MAX = 3;      // 눈송이 낙하 최대 속도
+    const SIZE_MIN = 16;           // 눈송이 최소 글자 크기(px)
+    const SIZE_MAX = 28;           // 눈송이 최대 글자 크기(px)
+
+    let activeSnowflakes = [];
+
+    function spawnSnowflake() {
+      if (activeSnowflakes.length >= SNOWFLAKE_COUNT) return;
+
+      const el = document.createElement('div');
+      el.className = 'snowflake';
+      el.textContent = '❄';
+
+      const size = randBetween(SIZE_MIN, SIZE_MAX);
+      const startX = Math.random() * window.innerWidth;
+      const startY = -size - 10;
+      const speed = randBetween(FALL_SPEED_MIN, FALL_SPEED_MAX);
+
+      el.style.fontSize = size + 'px';
+      el.style.transform = `translate(${startX}px, ${startY}px)`;
+
+      document.body.appendChild(el);
+      activeSnowflakes.push({ el, x: startX, y: startY, speed, size });
+    }
+
+    function updateSnowflakes() {
+      const allButtons = document.querySelectorAll('button, .download-btn');
+
+      for (let i = 0; i < activeSnowflakes.length; i++) {
+        const flake = activeSnowflakes[i];
+        if (!flake) continue;
+
+        // 아래로 이동
+        flake.y += flake.speed;
+
+        // 버튼 충돌 체크
+        let anchored = false;
+        for (const btn of allButtons) {
+          const rect = btn.getBoundingClientRect();
+
+          // 눈송이의 중심 X
+          const flakeCenterX = flake.x + flake.size / 2;
+          // 눈송이의 바닥 Y
+          const flakeBottomY = flake.y + flake.size;
+
+          // 충돌 판정
+          const hit =
+            flakeBottomY >= rect.top &&
+            flakeCenterX >= rect.left &&
+            flakeCenterX <= rect.right &&
+            flake.y <= rect.bottom;
+
+          if (hit) {
+            anchorSnowflakeToButton(flake, btn, rect);
+            activeSnowflakes[i] = null;
+            anchored = true;
+            break;
+          }
         }
 
-        // 효과별 변환 함수를 반환
-        function getTransformationFunction(effect, params, totalFrames) {
-            switch(effect) {
-                case 'chromatic':
-                    return (ctx, frame) => applyChromatic(ctx, frame, totalFrames, params);
-                case 'rainbow':
-                    return (ctx, frame) => applyRainbow(ctx, frame, totalFrames, params);
-                case 'jitter':
-                    return (ctx, frame) => applyJitter(ctx, frame, totalFrames, params);
-                case 'glitch':
-                    return (ctx, frame) => applyGlitch(ctx, frame, totalFrames, params);
-                case 'rotation':
-                    return (ctx, frame) => applyRotation(ctx, frame, totalFrames, params);
-                case 'wave':
-                    return (ctx, frame) => applyWave(ctx, frame, totalFrames, params);
-                case 'shake':
-                    return (ctx, frame) => applyShake(ctx, frame, totalFrames, params);
-                case 'inversion':
-                    return (ctx, frame) => applyInversion(ctx, frame, totalFrames, params);
-                case 'horizontalStretch':
-                    return (ctx, frame) => applyHorizontalStretch(ctx, frame, totalFrames, params);
-                case 'verticalStretch':
-                    return (ctx, frame) => applyVerticalStretch(ctx, frame, totalFrames, params);
-                case 'elastic':
-                    return (ctx, frame) => applyElastic(ctx, frame, totalFrames, params);
-                case 'jump':
-                    return (ctx, frame) => applyJump(ctx, frame, totalFrames, params);
-                case 'glow':
-                    return (ctx, frame) => applyGlow(ctx, frame, totalFrames, params);
-                case 'pixelate':
-                    return (ctx, frame) => applyPixelate(ctx, frame, totalFrames, params);
-                case 'droplet':
-                    return (ctx, frame) => applyDroplet(ctx, frame, totalFrames, params);
-                case 'flag':
-                    return (ctx, frame) => applyFlag(ctx, frame, totalFrames, params);
-                default:
-                    return () => {};
-            }
+        // 버튼에 붙지 않고 화면 아래 벗어나면 제거
+        if (!anchored) {
+          if (flake.y > window.innerHeight) {
+            flake.el.remove();
+            activeSnowflakes[i] = null;
+          } else {
+            flake.el.style.transform = `translate(${flake.x}px, ${flake.y}px)`;
+          }
         }
+      }
 
-        // 효과 적용 함수들
+      // null 정리
+      activeSnowflakes = activeSnowflakes.filter(f => f !== null);
 
-        // 크로마 효과: RGB 채널을 분리하여 약간씩 이동 및 무지개빛 추가
-        function applyChromatic(ctx, frame, totalFrames, params) {
-            const intensity = params.chromaticIntensity;
-            const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCanvas.width = ctx.canvas.width;
-            tempCanvas.height = ctx.canvas.height;
-            tempCtx.drawImage(ctx.canvas, 0, 0);
+      requestAnimationFrame(updateSnowflakes);
+    }
 
-            // Red 채널 이동
-            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-            ctx.globalCompositeOperation = 'source-over';
-            ctx.drawImage(
-                tempCanvas,
-                intensity * Math.sin((frame / totalFrames) * Math.PI * 2),
-                0,
-                ctx.canvas.width,
-                ctx.canvas.height
-            );
+    function anchorSnowflakeToButton(flake, btn, rect) {
+      flake.el.remove();
 
-            // Red 채널의 불투명도 조절
-            ctx.globalAlpha = 1;
+      const anchoredEl = document.createElement('div');
+      anchoredEl.className = 'anchored-snowflake';
+      anchoredEl.textContent = '❄';
+      anchoredEl.style.fontSize = flake.size + 'px';
 
-            // Green 채널 이동
-            ctx.globalCompositeOperation = 'lighter';
-            ctx.drawImage(
-                tempCanvas,
-                -intensity * Math.sin((frame / totalFrames) * Math.PI * 2),
-                0,
-                ctx.canvas.width,
-                ctx.canvas.height
-            );
+      // 버튼 내부 좌표
+      const offsetX = flake.x - rect.left;
+      const offsetY = flake.y - rect.top;
 
-            // Green 채널의 불투명도 조절
-            ctx.globalAlpha = 1;
+      anchoredEl.style.left = offsetX + 'px';
+      anchoredEl.style.top = offsetY + 'px';
 
-            // Blue 채널 원래 위치
-            ctx.globalCompositeOperation = 'lighter';
-            ctx.drawImage(
-                tempCanvas,
-                0,
-                0,
-                ctx.canvas.width,
-                ctx.canvas.height
-            );
+      btn.appendChild(anchoredEl);
+    }
 
-            // Blue 채널의 불투명도 조절
-            ctx.globalAlpha = 1;
+    function randBetween(min, max) {
+      return Math.random() * (max - min) + min;
+    }
 
-            // 무지개 오버레이 추가
-            ctx.globalCompositeOperation = 'overlay';
-            const gradient = ctx.createLinearGradient(0, 0, ctx.canvas.width, ctx.canvas.height);
-            gradient.addColorStop(0, 'rgba(255,0,0,0.1)');
-            gradient.addColorStop(0.16, 'rgba(255,127,0,0.1)');
-            gradient.addColorStop(0.33, 'rgba(255,255,0,0.1)');
-            gradient.addColorStop(0.5, 'rgba(0,255,0,0.1)');
-            gradient.addColorStop(0.66, 'rgba(0,0,255,0.1)');
-            gradient.addColorStop(0.83, 'rgba(75,0,130,0.1)');
-            gradient.addColorStop(1, 'rgba(148,0,211,0.1)');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-
-            // 불투명도 및 합성 모드 초기화
-            ctx.globalAlpha = 1.0;
-            ctx.globalCompositeOperation = 'source-over';
-        }
-
-        // 무지개 효과: 완전한 무지개 스펙트럼 오버레이 강화
-        function applyRainbow(ctx, frame, totalFrames, params) {
-            const speed = params.rainbowSpeed;
-            const hueShift = (frame / totalFrames) * 360 * speed;
-
-            // 무지개 그라데이션 생성
-            const gradient = ctx.createLinearGradient(0, 0, ctx.canvas.width, ctx.canvas.height);
-            for (let i = 0; i <= 360; i += 60) {
-                const hue = (i + hueShift) % 360;
-                gradient.addColorStop(i / 360, `hsl(${hue}, 100%, 50%)`);
-            }
-
-            ctx.globalCompositeOperation = 'overlay';
-            ctx.fillStyle = gradient;
-            ctx.globalAlpha = 0.5; // 투명도 조절
-            ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-            ctx.globalAlpha = 1.0;
-            ctx.globalCompositeOperation = 'source-over';
-        }
-
-        // 지터 효과: 랜덤한 위치 이동
-        function applyJitter(ctx, frame, totalFrames, params) {
-            const intensity = params.jitterIntensity;
-            const dx = (Math.random() - 0.5) * intensity;
-            const dy = (Math.random() - 0.5) * intensity;
-            ctx.translate(dx, dy);
-            ctx.drawImage(ctx.canvas, 0, 0);
-            ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
-        }
-
-        // 글리치 효과 적용 함수
-        function applyGlitch(ctx, frame, totalFrames, params) {
-            const intensity = params.glitchIntensity; // 글리치 강도
-            const slices = Math.floor(Math.random() * 5) + 3; // 슬라이스 개수 (3~7)
-            const sliceHeight = Math.floor(ctx.canvas.height / slices);
-
-            for (let i = 0; i < slices; i++) {
-                // 랜덤 색상 선택: 초록 또는 파랑, 투명도 0.2로 설정
-                const color = Math.random() > 0.5 ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 0, 255, 0.2)';
-                
-                // 슬라이스의 y 위치
-                const y = i * sliceHeight;
-                
-                // 슬라이스의 높이 (마지막 슬라이스는 나머지 전체 높이)
-                const height = (i === slices - 1) ? (ctx.canvas.height - y) : sliceHeight;
-                
-                // 슬라이스를 이동할 x 축 방향의 랜덤값 (intensity 범위 내)
-                const shiftX = (Math.random() - 0.5) * intensity;
-                
-                // 슬라이스를 이동할 y 축 방향의 랜덤값 (필요에 따라 추가 가능)
-                const shiftY = 0; // 수평 이동만 원하시면 0으로 고정
-                
-                // 슬라이스를 캔버스에서 추출
-                const slice = ctx.getImageData(0, y, ctx.canvas.width, height);
-                
-                // 새로운 임시 캔버스 생성
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = ctx.canvas.width;
-                tempCanvas.height = height;
-                const tempCtx = tempCanvas.getContext('2d');
-                
-                // 슬라이스를 임시 캔버스에 그리기
-                tempCtx.putImageData(slice, 0, 0);
-                
-                // 색상 오버레이 적용
-                tempCtx.fillStyle = color;
-                tempCtx.globalCompositeOperation = 'source-atop';
-                tempCtx.fillRect(0, 0, tempCanvas.width, height);
-                
-                // 원래 캔버스에 이동된 슬라이스 그리기
-                ctx.drawImage(tempCanvas, shiftX, y + shiftY);
-            }
-        }
-
-        // 회전 효과: 이미지 지속 회전
-        function applyRotation(ctx, frame, totalFrames, params) {
-            const speed = params.rotationSpeed;
-            const angle = (speed * 2 * Math.PI * frame) / totalFrames;
-            const centerX = ctx.canvas.width / 2;
-            const centerY = ctx.canvas.height / 2;
-
-            // 현재 이미지 데이터를 임시 캔버스로 저장
-            const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCanvas.width = ctx.canvas.width;
-            tempCanvas.height = ctx.canvas.height;
-            tempCtx.drawImage(ctx.canvas, 0, 0);
-
-            // 회전 적용
-            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-            ctx.save();
-            ctx.translate(centerX, centerY);
-            ctx.rotate(angle);
-            ctx.drawImage(tempCanvas, -centerX, -centerY);
-            ctx.restore();
-        }
-
-        // 물결 효과: 부드러운 물결 변형
-        function applyWave(ctx, frame, totalFrames, params) {
-            const amplitude = params.waveAmplitude;
-            const speed = params.waveSpeed;
-            const animationSpeed = params.waveAnimationSpeed; // 추가된 부분
-            const frequency = 2 * Math.PI * speed;
-
-            const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCanvas.width = ctx.canvas.width;
-            tempCanvas.height = ctx.canvas.height;
-
-            for (let y = 0; y < ctx.canvas.height; y++) {
-                const shift = amplitude * Math.sin(
-                    (y / ctx.canvas.height) * frequency + (frame / totalFrames) * 2 * Math.PI * animationSpeed // 수정된 부분
-                );
-                tempCtx.drawImage(ctx.canvas, shift, y, ctx.canvas.width, 1, 0, y, ctx.canvas.width, 1);
-            }
-
-            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-            ctx.drawImage(tempCanvas, 0, 0);
-        }
-
-        // 흔들기 효과: 좌우 및 상하로 자연스럽게 흔들림
-        function applyShake(ctx, frame, totalFrames, params) {
-            const intensity = params.shakeIntensity;
-            const speed = params.shakeSpeed;
-            const dx = intensity * Math.sin((frame / totalFrames) * 2 * Math.PI * speed);
-            const dy = intensity * Math.cos((frame / totalFrames) * 2 * Math.PI * speed);
-            ctx.translate(dx, dy);
-            ctx.drawImage(ctx.canvas, 0, 0);
-            ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
-        }
-
-        // 반전 효과: 일정 주기마다 색상 반전
-        function applyInversion(ctx, frame, totalFrames, params) {
-            const frequency = params.inversionFrequency;
-            const duration = params.inversionDuration;
-
-            const cycle = frequency + duration;
-            const currentCycle = frame % cycle;
-
-            if (currentCycle < duration) {
-                const imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
-                const data = imageData.data;
-                for (let i = 0; i < data.length; i += 4) {
-                    data[i] = 255 - data[i];     // Red
-                    data[i + 1] = 255 - data[i + 1]; // Green
-                    data[i + 2] = 255 - data[i + 2]; // Blue
-                }
-                ctx.putImageData(imageData, 0, 0);
-            }
-        }
-
-        // 가로 늘리기 효과: 좌우로 스케일링
-        function applyHorizontalStretch(ctx, frame, totalFrames, params) {
-            const amount = params.horizontalStretchAmount;
-            const speed = params.horizontalStretchSpeed;
-            const scale = 1 + (amount - 1) * Math.sin((frame / totalFrames) * 2 * Math.PI * speed);
-            const centerX = ctx.canvas.width / 2;
-
-            const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCanvas.width = ctx.canvas.width;
-            tempCanvas.height = ctx.canvas.height;
-            tempCtx.drawImage(ctx.canvas, 0, 0);
-
-            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-            ctx.save();
-            ctx.translate(centerX, 0);
-            ctx.scale(scale, 1);
-            ctx.drawImage(tempCanvas, -centerX, 0);
-            ctx.restore();
-        }
-
-        // 세로 늘리기 효과: 상하로 스케일링
-        function applyVerticalStretch(ctx, frame, totalFrames, params) {
-            const amount = params.verticalStretchAmount;
-            const speed = params.verticalStretchSpeed;
-            const scale = 1 + (amount - 1) * Math.cos((frame / totalFrames) * 2 * Math.PI * speed);
-            const centerY = ctx.canvas.height / 2;
-
-            const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCanvas.width = ctx.canvas.width;
-            tempCanvas.height = ctx.canvas.height;
-            tempCtx.drawImage(ctx.canvas, 0, 0);
-
-            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-            ctx.save();
-            ctx.translate(0, centerY);
-            ctx.scale(1, scale);
-            ctx.drawImage(tempCanvas, 0, -centerY);
-            ctx.restore();
-        }
-
-        // 쫀득쫀득 효과: 탄력적인 스케일링
-        function applyElastic(ctx, frame, totalFrames, params) {
-            const intensity = params.elasticIntensity;
-            const speed = params.elasticSpeed;
-            const scale = 1 + intensity * Math.sin((frame / totalFrames) * 2 * Math.PI * speed) * Math.exp(-frame / totalFrames);
-            const centerX = ctx.canvas.width / 2;
-            const centerY = ctx.canvas.height / 2;
-
-            const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCanvas.width = ctx.canvas.width;
-            tempCanvas.height = ctx.canvas.height;
-            tempCtx.drawImage(ctx.canvas, 0, 0);
-
-            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-            ctx.save();
-            ctx.translate(centerX, centerY);
-            ctx.scale(scale, scale);
-            ctx.drawImage(tempCanvas, -centerX, -centerY);
-            ctx.restore();
-        }
-
-        // 점프 효과: 위아래로 자연스럽게 움직임
-        function applyJump(ctx, frame, totalFrames, params) {
-            const height = params.jumpHeight;
-            const speed = params.jumpSpeed;
-            const dy = height * Math.abs(Math.sin((frame / totalFrames) * Math.PI * speed));
-            ctx.translate(0, -dy);
-            ctx.drawImage(ctx.canvas, 0, 0);
-            ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
-        }
-
-        // 발광 효과: 주기적으로 부드러운 발광
-        function applyGlow(ctx, frame, totalFrames, params) {
-            const frequency = params.glowFrequency;
-            const intensity = params.glowIntensity;
-
-            const cycle = frequency * 2;
-            const currentCycle = frame % cycle;
-
-            const alpha = currentCycle < frequency 
-                ? (currentCycle / frequency) * intensity 
-                : ((cycle - currentCycle) / frequency) * intensity;
-
-            ctx.globalCompositeOperation = 'lighter';
-            ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-            ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-            ctx.globalCompositeOperation = 'source-over';
-        }
-
-        // 픽셀화 효과: 픽셀 크기 조정
-        function applyPixelate(ctx, frame, totalFrames, params) {
-            const pixelSize = params.pixelateSize;
-            const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCanvas.width = Math.ceil(ctx.canvas.width / pixelSize);
-            tempCanvas.height = Math.ceil(ctx.canvas.height / pixelSize);
-
-            // 이미지를 축소
-            tempCtx.drawImage(ctx.canvas, 0, 0, tempCanvas.width, tempCanvas.height);
-            ctx.imageSmoothingEnabled = false;
-
-            // 이미지를 확대
-            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-            ctx.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 0, 0, ctx.canvas.width, ctx.canvas.height);
-
-            ctx.imageSmoothingEnabled = true;
-        }
-
-        // 물방울 효과: 물방울이 떨어지는 듯한 원형 오버레이
-        function applyDroplet(ctx, frame, totalFrames, params) {
-            const count = params.dropletCount;
-            const size = params.dropletSize;
-            const speed = params.dropletSpeed;
-
-            ctx.save();
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-            for (let i = 0; i < count; i++) {
-                const x = Math.random() * ctx.canvas.width;
-                const y = (frame * speed + Math.random() * ctx.canvas.height) % ctx.canvas.height;
-                ctx.beginPath();
-                ctx.arc(x, y, size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.restore();
-        }
-
-        // 깃발 효과: 수직 방향으로 부드럽게 흔들림
-        function applyFlag(ctx, frame, totalFrames, params) {
-            const amplitude = params.flagAmplitude;
-            const frequency = params.flagFrequency;
-            const animationSpeed = params.flagAnimationSpeed; // 추가된 부분
-
-            const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCanvas.width = ctx.canvas.width;
-            tempCanvas.height = ctx.canvas.height;
-
-            for (let x = 0; x < ctx.canvas.width; x++) {
-                const shift = amplitude * Math.sin(
-                    (x / ctx.canvas.width) * 2 * Math.PI * frequency +
-                    (frame / totalFrames) * 2 * Math.PI * animationSpeed // 수정된 부분
-                );
-                tempCtx.drawImage(
-                    ctx.canvas,
-                    x,
-                    0,
-                    1,
-                    ctx.canvas.height,
-                    x,
-                    shift,
-                    1,
-                    ctx.canvas.height
-                );
-            }
-
-            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-            ctx.drawImage(tempCanvas, 0, 0);
-        }
-    </script>
+    window.addEventListener('DOMContentLoaded', () => {
+      requestAnimationFrame(updateSnowflakes);
+      setInterval(spawnSnowflake, SPAWN_INTERVAL);
+    });
+  </script>
 </body>
 </html>

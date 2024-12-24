@@ -1,112 +1,136 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>겹치는 특수문자 복사</title>
-<link rel="icon" href="https://i.imgur.com/2MkyDCh.png" type="image/png">
-<style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>겹치는 특수문자 복사</title>
+  <link rel="icon" href="https://i.imgur.com/2MkyDCh.png" type="image/png"/>
+  <style>
+    /* ===== [크리스마스 분위기: body 배경 + 스크롤 숨김] ===== */
     body {
-        font-family: Arial, sans-serif;
-        background-color: #ffffff;
-        color: #333;
-        padding: 20px;
+      /* 크리스마스 느낌 배경 */
+      background: #fefefe no-repeat center center fixed;
+      background-size: cover;
+      position: relative;
+      overflow: hidden; /* 눈송이가 화면 밖을 넘어가도 스크롤바가 생기지 않도록 */
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: #333;
+      padding: 20px;
     }
+
     h1 {
-        text-align: center;
-        color: #000000;
-    }
-    .unicode-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-        margin-bottom: 20px;
-    }
-    .unicode-char {
-        font-size: 24px;
-        padding: 10px;
-        background-color: #f3f3f3;
-        border: 1px solid #c9c9c9;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: transform 0.2s, background-color 0.2s;
-    }
-    .unicode-char:hover {
-        transform: scale(1.2);
-        background-color: #f3f3f3;
-    }
-    .unicode-char:active {
-        transform: scale(1.1);
-        background-color: #e0e0e0;
+      text-align: center;
+      color: #000000;
     }
 
     .header-content {
-            display: flex;
-            align-items: center;
-            justify-content: start;
-            margin-bottom: 20px;
-            font-size: 30px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: start;
+      margin-bottom: 20px;
+      font-size: 30px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    .header-content img {
+      margin-right: 20px;
     }
 
-    .header-content img {
-            margin-right: 20px;
+    .unicode-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    /* ===== [클릭 가능한 영역: position: relative; (눈송이 앵커링)] ===== */
+    .unicode-char {
+      font-size: 24px;
+      padding: 10px;
+      background-color: #f3f3f3;
+      border: 1px solid #c9c9c9;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: transform 0.2s, background-color 0.2s;
+      position: relative; /* 눈송이 붙이기 위한 설정 */
+      overflow: visible;
+    }
+    .unicode-char:hover {
+      transform: scale(1.2);
+      background-color: #f3f3f3;
+    }
+    .unicode-char:active {
+      transform: scale(1.1);
+      background-color: #e0e0e0;
     }
 
     .copy-text {
-        font-weight: bold;
-        font-size: 20px;
-        background-color: rgb(0, 148, 44);
-        color: rgb(0, 255, 13);
+      font-weight: bold;
+      font-size: 20px;
+      background-color: rgb(0, 148, 44);
+      color: rgb(0, 255, 13);
     }
 
-</style>
-<script>
-    function generateUnicodeRange(start, end) {
-        let range = "";
-        for (let i = start; i <= end; i++) {
-            range += `<span class="unicode-char" onclick="copyToClipboard('${String.fromCharCode(i)}')">${String.fromCharCode(i)}</span>`;
-        }
-        return range;
+    /* ===== 눈송이 기본 스타일 (JS로 움직이므로 위치는 transform으로 제어) ===== */
+    .snowflake {
+      position: fixed;       /* 화면을 기준으로 고정 */
+      top: 0; left: 0;
+      pointer-events: none;  /* 클릭 방지 */
+      z-index: 9999;
+      color: #8ed2ff;        /* 눈 색상 */
+      font-size: 16px;
+      will-change: transform; /* 성능 최적화용 */
     }
 
+    /* 특수문자 요소에 붙은(멈춘) 눈송이 스타일 */
+    .anchored-snowflake {
+      position: absolute;
+      pointer-events: none;
+      color: #8ed2ff;
+      line-height: 1;
+      white-space: nowrap;
+      user-select: none;
+    }
+  </style>
+  <script>
     function copyToClipboard(text) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(() => {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard
+          .writeText(text)
+          .then(() => {
             alert(`${text} 복사되었습니다!`);
-        }).catch(err => {
-            alert('복사에 실패했습니다.');
-        });
-    } else {
+          })
+          .catch((err) => {
+            alert("복사에 실패했습니다.");
+          });
+      } else {
         // Fallback for older browsers
         let textArea = document.createElement("textarea");
         textArea.value = text;
-        textArea.style.position = "fixed";  // Avoid scrolling to bottom
+        textArea.style.position = "fixed"; // Avoid scrolling to bottom
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
         try {
-            document.execCommand('copy');
-            alert(`${text} 복사되었습니다!`);
+          document.execCommand("copy");
+          alert(`${text} 복사되었습니다!`);
         } catch (err) {
-            alert('복사에 실패했습니다.');
+          alert("복사에 실패했습니다.");
         }
         document.body.removeChild(textArea);
+      }
     }
-}
-
-
-</script>
+  </script>
 </head>
-<body onload="displayUnicode()">
-<div class="header-content">
+<body>
+  <div class="header-content">
     <img src="https://i.imgur.com/2MkyDCh.png" alt="Logo" style="width: 120px; height: auto;">
     <h1>겹치는 특수문자 복사 사이트</h1>
-</div>
-<span class="copy-text">[글자를 클릭해서 복사하시오]</span>
-<br><br>
-<h2>투명, 곂치는 문자</h2>
-<div class="unicode-container">
+  </div>
+  <span class="copy-text">[글자를 클릭해서 복사하시오]</span>
+  <br /><br />
+  <h2>투명, 곂치는 문자</h2>
+  <div class="unicode-container">
     <span class="unicode-char" onclick="copyToClipboard('ꢶ')">ꢶ</span>
     <span class="unicode-char" onclick="copyToClipboard('꣄')">꣄</span>
     <span class="unicode-char" onclick="copyToClipboard('ꣅ')">ꣅ</span>
@@ -127,9 +151,10 @@
     <span class="unicode-char" onclick="copyToClipboard('꙽')">꙽</span>
     <span class="unicode-char" onclick="copyToClipboard('꣺')">꣺</span>
     <span class="unicode-char" onclick="copyToClipboard('ㅤ')">ㅤ</span>
-</div>
-<h2>영어와 비슷한 문자</h2>
-<div class="unicode-container">
+  </div>
+
+  <h2>영어와 비슷한 문자</h2>
+  <div class="unicode-container">
     <span class="unicode-char" onclick="copyToClipboard('ꓐ')">ꓐ</span>
     <span class="unicode-char" onclick="copyToClipboard('ꓑ')">ꓑ</span>
     <span class="unicode-char" onclick="copyToClipboard('ꓓ')">ꓓ</span>
@@ -154,9 +179,10 @@
     <span class="unicode-char" onclick="copyToClipboard('Ꚃ')">Ꚃ</span>
     <span class="unicode-char" onclick="copyToClipboard('Ꜳ')">Ꜳ</span>
     <span class="unicode-char" onclick="copyToClipboard('Ɦ')">Ɦ</span>
-</div>
-<h2>기호</h2>
-<div class="unicode-container">
+  </div>
+
+  <h2>기호</h2>
+  <div class="unicode-container">
     <span class="unicode-char" onclick="copyToClipboard('ꓸ')">ꓸ</span>
     <span class="unicode-char" onclick="copyToClipboard('ꓹ')">ꓹ</span>
     <span class="unicode-char" onclick="copyToClipboard('ꓼ')">ꓼ</span>
@@ -180,7 +206,126 @@
     <span class="unicode-char" onclick="copyToClipboard('ㆍ')">ㆍ</span>
     <span class="unicode-char" onclick="copyToClipboard('ꐚ')">ꐚ</span>
     <span class="unicode-char" onclick="copyToClipboard('ꐙ')">ꐙ</span>
-</div>
+  </div>
 
+  <!-- ===== [JS] 눈송이 낙하 ===== -->
+  <script>
+    /**
+     * - 일정 간격으로 "❄" 눈송이 생성 (setInterval)
+     * - requestAnimationFrame으로 x,y 좌표 갱신 (아래로 이동)
+     * - .unicode-char와 충돌 시 해당 요소 내부에 붙은 눈송이(.anchored-snowflake)로 변경
+     * - 화면 아래 벗어나면 제거
+     */
+
+    const SNOWFLAKE_COUNT = 200;  // 동시에 화면에 존재 가능한 최대 눈송이 수
+    const SPAWN_INTERVAL = 400;   // 눈송이 생성 주기 (ms)
+    const FALL_SPEED_MIN = 1;     // 눈송이 낙하 최소 속도
+    const FALL_SPEED_MAX = 3;     // 눈송이 낙하 최대 속도
+    const SIZE_MIN = 16;          // 눈송이 최소 글자 크기(px)
+    const SIZE_MAX = 28;          // 눈송이 최대 글자 크기(px)
+
+    let activeSnowflakes = [];
+
+    function spawnSnowflake() {
+      if (activeSnowflakes.length >= SNOWFLAKE_COUNT) return;
+
+      const el = document.createElement('div');
+      el.className = 'snowflake';
+      el.textContent = '❄';
+
+      const size = randBetween(SIZE_MIN, SIZE_MAX);
+      const startX = Math.random() * window.innerWidth;
+      const startY = -size - 10;
+      const speed = randBetween(FALL_SPEED_MIN, FALL_SPEED_MAX);
+
+      el.style.fontSize = size + 'px';
+      el.style.transform = `translate(${startX}px, ${startY}px)`;
+
+      document.body.appendChild(el);
+      activeSnowflakes.push({ el, x: startX, y: startY, speed, size });
+    }
+
+    function updateSnowflakes() {
+      const allChars = document.querySelectorAll('.unicode-char');
+
+      for (let i = 0; i < activeSnowflakes.length; i++) {
+        const flake = activeSnowflakes[i];
+        if (!flake) continue;
+
+        // 아래로 이동
+        flake.y += flake.speed;
+
+        // 충돌 체크
+        let anchored = false;
+        for (const charEl of allChars) {
+          const rect = charEl.getBoundingClientRect();
+
+          // 눈송이 중심 X
+          const flakeCenterX = flake.x + flake.size / 2;
+          // 눈송이 바닥 Y
+          const flakeBottomY = flake.y + flake.size;
+
+          // 충돌 판정
+          const hit =
+            flakeBottomY >= rect.top &&
+            flakeCenterX >= rect.left &&
+            flakeCenterX <= rect.right &&
+            flake.y <= rect.bottom;
+
+          if (hit) {
+            anchorSnowflakeToChar(flake, charEl, rect);
+            activeSnowflakes[i] = null;
+            anchored = true;
+            break;
+          }
+        }
+
+        // 문자가 아니라 화면 아래로 벗어나면 제거
+        if (!anchored) {
+          if (flake.y > window.innerHeight) {
+            flake.el.remove();
+            activeSnowflakes[i] = null;
+          } else {
+            flake.el.style.transform = `translate(${flake.x}px, ${flake.y}px)`;
+          }
+        }
+      }
+
+      // null 제거
+      activeSnowflakes = activeSnowflakes.filter(f => f !== null);
+
+      requestAnimationFrame(updateSnowflakes);
+    }
+
+    function anchorSnowflakeToChar(flake, charEl, rect) {
+      // 기존 눈송이 제거
+      flake.el.remove();
+
+      // 새 DOM
+      const anchoredEl = document.createElement('div');
+      anchoredEl.className = 'anchored-snowflake';
+      anchoredEl.textContent = '❄';
+      anchoredEl.style.fontSize = flake.size + 'px';
+
+      // charEl 기준 좌표
+      const offsetX = flake.x - rect.left;
+      const offsetY = flake.y - rect.top;
+
+      anchoredEl.style.left = offsetX + 'px';
+      anchoredEl.style.top = offsetY + 'px';
+
+      charEl.appendChild(anchoredEl);
+    }
+
+    function randBetween(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    // 초기화
+    window.addEventListener('DOMContentLoaded', () => {
+      requestAnimationFrame(updateSnowflakes);
+      setInterval(spawnSnowflake, SPAWN_INTERVAL);
+    });
+  </script>
 </body>
 </html>

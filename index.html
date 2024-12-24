@@ -1,80 +1,254 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>바로가기</title>
-    <link rel="icon" href="https://i.imgur.com/2MkyDCh.png" type="image/png">
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>바로가기</title>
+  <link rel="icon" href="https://i.imgur.com/2MkyDCh.png" type="image/png" />
+  <style>
+    /* ===== [크리스마스 배경 + 기존 스타일 통합] ===== */
+    body {
+      display: flex;
+      flex-direction: column; 
+      justify-content: flex-start;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      /* 크리스마스 느낌 배경 */
+      background: #fefefe no-repeat center center fixed;
+      background-size: cover;
+      position: relative;
+      overflow: hidden; /* 눈송이가 화면 밖으로 넘어가는 것 방지 */
+    }
 
-        .container {
-            text-align: center;
-        }
+    .container {
+      text-align: center;
+      margin-top: 50px;
+    }
 
-        .header-content {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            font-size: 30px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-        }
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      font-size: 30px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
 
-        .header-content img {
-            margin-right: 20px;
-        }
+    .header-content img {
+      margin-right: 20px;
+    }
 
-        button {
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 20px;
-            padding: 10px 20px;
-            margin: 100px 0; /* Adjust the margin as needed */
-            width: 600px; /* Fixed width */
-            height: 61px; /* Fixed height */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
-            font-weight: bold;
-            font-size: 30px;
-        }
+    /* 버튼 스타일을 빨간색으로 변경 + 눈송이 앵커링을 위해 position:relative */
+    button {
+      background-color: #c62828; /* 레드 */
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 20px;
+      margin: 20px 0; /* 버튼 위아래 간격 조정 */
+      width: 600px;   /* 고정 가로 폭 */
+      height: 61px;   /* 고정 높이 */
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.1s ease,
+        box-shadow 0.3s ease;
+      font-weight: bold;
+      font-size: 24px;
+      text-align: center;
+      position: relative;  /* 버튼 내부에서 .anchored-snowflake를 배치하기 위함 */
+      overflow: visible;   /* 눈송이가 버튼 밖으로 살짝 튀어나올 수 있으니 visible */
+    }
 
-        button:hover {
-            background-color: #005BDD;
-            transform: translateY(2px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
+    button:hover {
+      background-color: #a21818;
+      transform: translateY(2px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
 
-        button:active {
-            background-color: #0026a3;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-    </style>
+    button:active {
+      background-color: #670c0c;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    /* ===== 눈송이 기본 스타일 (JS로 움직이므로 위치는 transform으로 제어) ===== */
+    .snowflake {
+      position: fixed;       /* 화면을 기준으로 고정 */
+      top: 0;
+      left: 0;
+      pointer-events: none;  /* 마우스 이벤트 방해 X */
+      z-index: 9999;
+      color: #8ed2ff;        /* 눈 색상 */
+      font-size: 16px;
+      will-change: transform; /* 성능 최적화용 */
+    }
+
+    /* 버튼에 붙은(멈춘) 눈송이 스타일 */
+    .anchored-snowflake {
+      position: absolute;
+      pointer-events: none;
+      color: #8ed2ff;        
+      line-height: 1;
+      white-space: nowrap;   
+      user-select: none;     
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header-content">
-            <img src="https://i.imgur.com/2MkyDCh.png" alt="Logo" style="width: 120px; height: auto;">
-            <h1>바로가기 메인 페이지</h1>
-        </div>
-        <button onclick="window.location.href='/gif-bimg';">움직이는 배사</button>
-        <button onclick="window.location.href='/gif-pimg';">움직이는 프사</button>
-        <button onclick="window.location.href='/link-to-date';">생성일자</button>
-        <button onclick="window.location.href='/unicode';">특수문자</button>
-        <button onclick="window.location.href='/vid-img';">동영상 이미지 변환</button>
-        <button onclick="window.location.href='/img';">이미지 공유</button>
-        <button onclick="window.location.href='/over-unicode';">겹치는 특수문자</button>
-        <button onclick="window.location.href='/img-gif';">이미지 gif 변환</button>
-        <button onclick="window.location.href='/gif-bgimg';">gif 배사 변환</button>
+  <div class="container">
+    <div class="header-content">
+      <img
+        src="https://i.imgur.com/2MkyDCh.png"
+        alt="Logo"
+        style="width: 120px; height: auto"
+      />
+      <h1>바로가기 메인 페이지</h1>
     </div>
+
+    <!-- ===== [버튼 목록] ===== -->
+    <button onclick="window.location.href='/gif-bimg';">움직이는 배사</button>
+    <button onclick="window.location.href='/gif-pimg';">움직이는 프사</button>
+    <button onclick="window.location.href='/link-to-date';">생성일자</button>
+    <button onclick="window.location.href='/unicode';">특수문자</button>
+    <button onclick="window.location.href='/vid-img';">동영상 이미지 변환</button>
+    <button onclick="window.location.href='/img';">이미지 공유</button>
+    <button onclick="window.location.href='/over-unicode';">겹치는 특수문자</button>
+    <button onclick="window.location.href='/img-gif';">이미지 gif 변환</button>
+    <button onclick="window.location.href='/gif-bgimg';">gif 배사 변환</button>
+  </div>
+
+  <!-- ===== [JS] 눈송이: 여러 버튼에 쌓이기 ===== -->
+  <script>
+    /**
+     * - 일정 간격으로 "❄" 눈송이 스폰 (setInterval)
+     * - requestAnimationFrame으로 x,y 좌표 갱신 (아래로 이동)
+     * - 버튼과 충돌 시 해당 버튼 위에 붙은 눈송이(.anchored-snowflake)로 변경
+     * - 화면 아래 벗어나면 제거
+     */
+
+    const SNOWFLAKE_COUNT = 200;  // 동시에 화면에 존재 가능한 최대 눈송이 수
+    const SPAWN_INTERVAL = 400;   // 눈송이 생성 주기 (ms)
+    const FALL_SPEED_MIN = 1;     // 눈송이 낙하 최소 속도
+    const FALL_SPEED_MAX = 3;     // 눈송이 낙하 최대 속도
+    const SIZE_MIN = 16;          // 눈송이 글자 최소 크기(px)
+    const SIZE_MAX = 28;          // 눈송이 글자 최대 크기(px)
+
+    let activeSnowflakes = [];
+
+    // 랜덤 범위
+    function randBetween(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    // 눈송이 생성
+    function spawnSnowflake() {
+      // 최대 개수를 넘으면 생성 중단
+      if (activeSnowflakes.length >= SNOWFLAKE_COUNT) return;
+
+      const el = document.createElement('div');
+      el.className = 'snowflake';
+      el.textContent = '❄'; // 눈송이
+
+      // 랜덤 크기/위치/속도
+      const size = randBetween(SIZE_MIN, SIZE_MAX);
+      const startX = Math.random() * window.innerWidth;
+      const startY = -size - 10;
+      const speed = randBetween(FALL_SPEED_MIN, FALL_SPEED_MAX);
+
+      el.style.fontSize = size + 'px';
+      el.style.transform = `translate(${startX}px, ${startY}px)`;
+
+      document.body.appendChild(el);
+      activeSnowflakes.push({ el, x: startX, y: startY, speed, size });
+    }
+
+    // 눈송이 위치 업데이트
+    function updateSnowflakes() {
+      const allButtons = document.querySelectorAll('button');
+
+      for (let i = 0; i < activeSnowflakes.length; i++) {
+        const flake = activeSnowflakes[i];
+        if (!flake) continue;
+
+        // 아래로 이동
+        flake.y += flake.speed;
+
+        // 버튼 충돌 체크
+        let anchored = false;
+        for (const btn of allButtons) {
+          const rect = btn.getBoundingClientRect();
+
+          // 눈송이의 중심 X
+          const flakeCenterX = flake.x + flake.size / 2;
+          // 눈송이의 바닥 Y
+          const flakeBottomY = flake.y + flake.size;
+
+          // 충돌 조건:
+          //   flakeBottomY >= 버튼 상단
+          //   flakeCenterX >= 버튼 왼쪽 && flakeCenterX <= 버튼 오른쪽
+          //   flake.y <= 버튼 하단
+          const hit =
+            flakeBottomY >= rect.top &&
+            flakeCenterX >= rect.left &&
+            flakeCenterX <= rect.right &&
+            flake.y <= rect.bottom;
+
+          if (hit) {
+            anchorSnowflakeToButton(flake, btn, rect);
+            // 기존 눈송이는 제거 표시
+            activeSnowflakes[i] = null;
+            anchored = true;
+            break;
+          }
+        }
+
+        // 버튼에 붙지 않았다면 화면 아래 벗어났는지 확인
+        if (!anchored) {
+          if (flake.y > window.innerHeight) {
+            // 제거
+            flake.el.remove();
+            activeSnowflakes[i] = null;
+          } else {
+            // 계속 이동
+            flake.el.style.transform = `translate(${flake.x}px, ${flake.y}px)`;
+          }
+        }
+      }
+
+      // null 정리
+      activeSnowflakes = activeSnowflakes.filter(f => f !== null);
+
+      requestAnimationFrame(updateSnowflakes);
+    }
+
+    // 버튼에 눈송이 붙이기
+    function anchorSnowflakeToButton(flake, btn, rect) {
+      // 원본 눈송이 제거
+      flake.el.remove();
+
+      // 새 DOM 요소를 버튼 내부에 붙임
+      const anchoredEl = document.createElement('div');
+      anchoredEl.className = 'anchored-snowflake';
+      anchoredEl.textContent = '❄';
+      anchoredEl.style.fontSize = flake.size + 'px';
+
+      // 버튼 기준 좌표
+      const offsetX = flake.x - rect.left;
+      const offsetY = flake.y - rect.top;
+
+      anchoredEl.style.left = offsetX + 'px';
+      anchoredEl.style.top = offsetY + 'px';
+
+      btn.appendChild(anchoredEl);
+    }
+
+    // 초기화
+    window.addEventListener('DOMContentLoaded', () => {
+      requestAnimationFrame(updateSnowflakes);  // 눈송이 이동 루프 시작
+      setInterval(spawnSnowflake, SPAWN_INTERVAL); // 일정 주기로 눈송이 생성
+    });
+  </script>
 </body>
 </html>

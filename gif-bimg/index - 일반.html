@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>효과를 적용한 배사 만들기</title>
+    <link rel="icon" href="https://i.imgur.com/2MkyDCh.png" type="image/png">
+    <style>
+        .file-upload-wrapper {
+            text-align: center;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0);
+            min-width: 350px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: auto;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            margin: 100px 0; /* Adjust the margin as needed */
+            width: 600px; /* Fixed width */
+            height: 61px; /* Fixed height */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+            font-weight: bold;
+            font-size: 30px;
+        }
+
+        button:hover {
+            background-color: #005BDD;
+            transform: translateY(2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        button:active {
+            background-color: #0026a3;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        #file-name {
+            margin: 10px 0;
+            font-weight: bold;
+            font-size: 30px;
+        }
+
+        #hidden-file-input {
+            display: none;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: start;
+            margin-bottom: 20px;
+            font-size: 30px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .header-content img {
+            margin-right: 20px;
+        }
+
+        #effect-selector {
+            font-size: 30px; /* 텍스트 크기 증가 */
+            padding: 10px 20px; /* 내부 패딩으로 드롭다운의 높이와 너비 증가 */
+            height: 60px; /* 드롭다운의 높이 설정 */
+            width: 300px; /* 드롭다운의 너비 설정 */
+            cursor: pointer; /* 마우스 오버시 커서 변경 */
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="file-upload-wrapper">
+        <div class="header-content">
+            <img src="https://i.imgur.com/2MkyDCh.png" alt="Logo" style="width: 120px; height: auto;">
+            <h1>파란행성 SVG 변환 사이트</h1>
+        </div>
+        <button id="custom-button">여기를 클릭해 사진을 선택하세요</button>
+        <input type="file" id="hidden-file-input" accept="image/png, image/jpg, image/jpeg, image/bmp" style="display: none;" />
+        <div id="file-name">파일이 선택되지 않았습니다.</div>
+        <select id="effect-selector">
+            <option value="회전">회전</option>
+            <option value="크기이동">크기이동</option>
+            <option value="이동">이동</option>
+            <option value="불투명도">불투명도</option>
+            <option value="무한배경">무한배경</option>
+            <option value="무지개">무지개</option>
+            <option value="흔들림">흔들림</option>
+            <option value="흑백변환">흑백변환</option>
+            <option value="색상반전">색상반전</option>
+            <option value="빛나기">빛나기</option>
+            <option value="분쇄기">분쇄기</option>
+            <option value="칼질">칼질</option>
+            <option value="위아래로 부풀기">위아래로 부풀기</option>
+            <option value="좌우로 이동">좌우로 이동</option>
+            <option value="섬광탄">섬광탄</option>
+            <option value="위로 사라지기">위로 사라지기</option>
+            <option value="색조 강조">색조 강조</option>
+            <option value="상하로 흔들림">상하로 흔들림</option>
+            <option value="빠른 무지개">빠른 무지개</option>
+            <option value="확대 후 축소">확대 후 축소</option>
+            <option value="심장 박동">심장 박동</option>
+            <option value="바른 불투명도">바른 불투명도</option>
+            <option value="옆으로 튀기기">옆으로 튀기기</option>
+        </select>
+        <button id="upload-button">여기를 클릭해 다운로드</button>
+    </div>
+
+    <script>
+        // 효과 목록을 객체로 추가합니다.
+        var effects = {
+            "회전": '@keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }\n' +
+            '.animated { animation: rotate 5s linear infinite; transform-origin: center; }\n',
+
+            "크기이동": '@keyframes scale { 0% { transform: scale(1); } 50% { transform: scale(1.5); } 100% { transform: scale(1); } }\n' +
+                        '.animated { animation: scale 5s linear infinite; }\n',
+
+            "이동": '@keyframes move {\n' +
+                    '    0% { transform: translate(0px, 0px); }\n' +
+                    '    25% { transform: translate(100px, -100px); }\n' +
+                    '    50% { transform: translate(200px, 0px); }\n' +
+                    '    75% { transform: translate(100px, 100px); }\n' +
+                    '    100% { transform: translate(0px, 0px); }\n' +
+                    '}\n' +
+                    '.animated { animation: move 10s linear infinite; }\n',
+
+            "불투명도": '@keyframes opacity { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }\n' +
+                        '.animated { animation: opacity 5s linear infinite; }\n',
+
+            "무한배경": '@keyframes continuousSlide {\n' +
+                        '    0% { transform: translateY(100%); }\n' +
+                        '    100% { transform: translateY(-100%); }\n' +
+                        '}\n' +
+                        '.animated { animation: continuousSlide 5s linear infinite; }\n' +
+                        '.animated2 { animation: continuousSlide 5s linear infinite; animation-delay: -2.5s; }\n',
+
+            "무지개": '@keyframes rainbow { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }\n' +
+                    '.animated { animation: rainbow 5s linear infinite; }\n',
+
+            "흔들림": '@keyframes shake { 0% { transform: translateX(0px); } 25% { transform: translateX(-100px); } 50% { transform: translateX(100px); } 75% { transform: translateX(-100px); } 100% { transform: translateX(0px); } }\n' +
+                    '.animated { animation: shake 0.1s linear infinite; }\n',
+
+            "흑백변환": '@keyframes blackWhiteToColor {\n' +
+                        '    0%, 100% { filter: grayscale(100%); }\n' +  // 흑백
+                        '    50% { filter: grayscale(0%); }\n' +  // 컬러
+                        '}\n' +
+                        '.animated { animation: blackWhiteToColor 10s linear infinite; }\n',
+
+            "색상반전": '@keyframes invert { 0% { filter: invert(0%); } 50% { filter: invert(100%); } 100% { filter: invert(0%); } }\n' +
+                        '.animated { animation: invert 3s linear infinite; }\n',
+
+            "빛나기": '@keyframes glow { 0% { filter: brightness(1); } 50% { filter: brightness(1.5); } 100% { filter: brightness(1); } }\n' +
+                    '.animated { animation: glow 2s ease-in-out infinite; }\n',
+
+            "분쇄기": '@keyframes rotateJump { ' +
+                    '0% { transform: translateY(0) rotate(0deg); } ' +
+                    '25% { transform: translateY(-15px) rotate(90deg); } ' +
+                    '50% { transform: translateY(-30px) rotate(180deg); } ' +
+                    '75% { transform: translateY(-15px) rotate(270deg); } ' +
+                    '100% { transform: translateY(0) rotate(360deg); } }\n' +
+                    '.animated { animation: rotateJump 0.1s ease-in-out infinite; }\n',
+
+            "칼질": '@keyframes swing { ' +
+            '0%, 100% { transform: translateX(0px) rotate(0deg); } ' +
+            '25% { transform: translateX(-150px) rotate(-100deg); } ' +
+            '50% { transform: translateX(150px) rotate(100deg); } ' +
+            '75% { transform: translateX(-150px) rotate(-100deg); } }\n' +
+            '.animated { animation: swing 2s ease-in-out infinite; }\n',
+
+            "위아래로 부풀기": '@keyframes pulse { ' +
+                            '0%, 100% { transform: scaleY(1); } ' +
+                            '50% { transform: scaleY(1.1); } }\n' +
+                            '.animated { animation: pulse 2s ease-in-out infinite; }\n',
+
+            "좌우로 이동": '@keyframes slide { 0% { transform: translateX(-100px); } 50% { transform: translateX(100px); } 100% { transform: translateX(-100px); } }\n' +
+                        '.animated { animation: slide 3s ease-in-out infinite; }\n',
+
+            "섬광탄": '@keyframes glow { 0% { filter: brightness(0); } 50% { filter: brightness(3); } 100% { filter: brightness(0); } }\n' +
+                    '.animated { animation: glow 1s ease-in-out infinite; }\n',
+
+            "위로 사라지기": '@keyframes flip { ' +
+                            '0%, 100% { transform: rotateX(0deg); } ' +
+                            '25% { transform: rotateX(90deg); } ' +
+                            '50% { transform: rotateX(180deg); } ' +
+                            '75% { transform: rotateX(270deg); } }\n' +
+                            '.animated { animation: flip 3s linear infinite; }\n',
+
+            "색조 강조": '@keyframes colorBoost { ' +
+                        '0%, 100% { filter: brightness(100%) contrast(100%); } ' +
+                        '50% { filter: brightness(60%) contrast(400%); } }\n' +
+                        '.animated { animation: colorBoost 2s ease-in-out infinite; }\n',
+
+            "상하로 흔들림": '@keyframes verticalShake { 0%, 100% { transform: translateY(15px); } 50% { transform: translateY(-15px); } }\n' +
+                            '.animated { animation: verticalShake 0.5s linear infinite; }\n',
+
+            "빠른 무지개": '@keyframes colorShift { ' +
+                        '0% { filter: hue-rotate(0deg); } ' +
+                        '25% { filter: hue-rotate(90deg); } ' +
+                        '50% { filter: hue-rotate(180deg); } ' +
+                        '75% { filter: hue-rotate(270deg); } ' +
+                        '100% { filter: hue-rotate(360deg); } }\n' +
+                        '.animated { animation: colorShift 0.5s linear infinite; }\n',
+
+            "확대 후 축소": '@keyframes zoomInOut { 0%, 100% { transform: scale(1); } 50% { transform: scale(5); } }\n' +
+                            '.animated { animation: zoomInOut 3s linear infinite; }\n',
+
+            "심장 박동": '@keyframes heartbeat { 0%, 100% { transform: scale(1); } 25%, 75% { transform: scale(1.2); } }\n' +
+                        '.animated { animation: heartbeat 1s linear infinite; }\n',
+
+            "빠른 불투명도": '@keyframes fadeInOut { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }\n' +
+                            '.animated { animation: fadeInOut 1s linear infinite; }\n',
+            
+            "옆으로 튀기기": '@keyframes reflection { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(0); } }\n' +
+                            '.animated { animation: reflection 3s linear infinite; }\n'
+        };
+
+        // 드롭다운 메뉴에 효과 옵션을 추가합니다.
+        var effectSelector = document.getElementById('effect-selector');
+        for(var effect in effects) {
+            var option = document.createElement('option');
+            option.value = effect;
+            option.text = effect;
+            effectSelector.appendChild(option);
+        }
+
+        // 파일 선택 버튼 이벤트를 처리합니다.
+        document.getElementById('custom-button').addEventListener('click', function() {
+            document.getElementById('hidden-file-input').click();
+        });
+
+        // 파일이 선택되면 이름을 표시합니다.
+        document.getElementById('hidden-file-input').addEventListener('change', function() {
+            const fileNameDisplay = document.getElementById('file-name');
+            fileNameDisplay.textContent = this.files[0].name;
+        });
+
+        // SVG 다운로드 버튼 이벤트를 처리합니다.
+        document.getElementById('upload-button').addEventListener('click', function() {
+            const file = document.getElementById('hidden-file-input').files[0];
+            const effect = effectSelector.value; // 사용자가 선택한 효과
+            if (!file) {
+                alert('파일을 선택한 후 다운로드가 가능합니다.');
+            } else {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        // effects 객체에서 사용자가 선택한 효과에 해당하는 CSS를 가져옵니다.
+                        const selectedEffectStyle = effects[effect];
+
+                        // 이미지의 가로 세로 크기에 맞춰 SVG의 width, height를 설정합니다.
+                        const svgData = `<svg width="${this.width}px" height="${this.height}px" xmlns="http://www.w3.org/2000/svg">
+                                            <style>
+                                                ${selectedEffectStyle}
+                                            </style>
+                                            <image href="${e.target.result}" width="${this.width}" height="${this.height}" class="animated"/>
+                                        </svg>`;
+
+                        // 생성된 SVG 데이터로 다운로드 링크를 생성합니다.
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = 'data:image/svg+xml;base64,' + window.btoa(unescape(encodeURIComponent(svgData)));
+                        downloadLink.download = 'animated_image.svg';
+                        document.body.appendChild(downloadLink);
+                        downloadLink.click();
+                        document.body.removeChild(downloadLink);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+</html>
