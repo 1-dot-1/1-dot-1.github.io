@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>파란행성 계정일자 변환기</title>
+  <style>
+    /* ===== [크리스마스 분위기: body에 배경 + 스크롤 숨김] ===== */
+    body {
+      /* 크리스마스 느낌 배경 */
+      background: #fefefe no-repeat center center fixed;
+      background-size: cover;
+      position: relative;
+      overflow: hidden; /* 눈송이가 화면 밖을 넘어가도 스크롤바 생기지 않도록 */
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    /* 컨테이너 스타일 */
+    .container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0);
+      text-align: center;
+    }
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: start;
+      margin-bottom: 20px;
+      font-size: 30px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    .header-content img {
+      margin-right: 20px;
+    }
+    input {
+      padding: 10px;
+      font-size: 30px;
+      margin: 10px 0;
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    /* ===== [버튼: 빨간색 + position: relative (눈송이 앵커링)] ===== */
+    button {
+      background-color: #c62828; /* 레드 */
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 20px;
+      margin: 20px 0;
+      width: 100%;
+      height: 61px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+      font-weight: bold;
+      font-size: 30px;
+      position: relative;  /* 버튼 내부에 눈송이를 "앵커링"하기 위함 */
+      overflow: visible;
+    }
+    button:hover {
+      background-color: #a21818;
+      transform: translateY(2px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    button:active {
+      background-color: #670c0c;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    #decimalOutput, #dateOutput {
+      font-size: 24px;
+      margin: 20px 0;
+    }
+
+    /* ===== 눈송이 기본 스타일 (JS로 움직이므로 위치는 transform으로 제어) ===== */
+    .snowflake {
+      position: fixed;       /* 화면을 기준으로 고정 */
+      top: 0; left: 0;
+      pointer-events: none;  /* 클릭 방지 */
+      z-index: 9999;
+      color: #8ed2ff;        /* 눈 색상 */
+      font-size: 16px;
+      will-change: transform; /* 성능 최적화용 */
+    }
+    /* 버튼에 붙은(멈춘) 눈송이 스타일 */
+    .anchored-snowflake {
+      position: absolute;
+      pointer-events: none;
+      color: #8ed2ff;
+      line-height: 1;
+      white-space: nowrap;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-content">
+      <img src="https://i.imgur.com/2MkyDCh.png" alt="Logo" style="width: 120px; height: auto;">
+      <h1>파란행성 계정생성일자 변환기</h1>
+    </div>
+    <input type="text" id="hexInput" placeholder="Enter hexadecimal string" />
+    <button onclick="convertHex()">변환</button>
+    <p id="decimalOutput"></p>
+    <p id="dateOutput"></p>
+  </div>
+
+  <!-- 원본 스크립트 (Hex -> Date 변환) -->
+  <script>
+    function convertHex() {
+      let hexString = document.getElementById('hexInput').value.trim();
+      if (hexString.length < 8) {
+        document.getElementById('decimalOutput').innerText = "Please enter a valid hexadecimal string.";
+        document.getElementById('dateOutput').innerText = "";
+        return;
+      }
+
+      // 8번째 글자 뒤에 소수점 추가
+      hexString = hexString.slice(0, 8) + '.' + hexString.slice(8);
+
+      let [integerPart, fractionalPart] = hexString.split('.');
+
+      // Convert integer part to decimal
+      let integerDecimal = parseInt(integerPart, 16);
+      if (isNaN(integerDecimal)) {
+        document.getElementById('decimalOutput').innerText = "Invalid integer part in hexadecimal string.";
+        document.getElementById('dateOutput').innerText = "";
+        return;
+      }
+
+      // Initialize fractional part
+      let fractionalScaled = 0;
+
+      if (fractionalPart && fractionalPart.length > 0) {
+        // Convert fractional part to decimal
+        let fractionalDecimal = parseInt(fractionalPart, 16);
+        if (isNaN(fractionalDecimal)) {
+          document.getElementById('decimalOutput').innerText = "Invalid fractional part in hexadecimal string.";
+          document.getElementById('dateOutput').innerText = "";
+          return;
+        }
+        let fractionalLength = fractionalPart.length * 4;
+        fractionalScaled = fractionalDecimal / Math.pow(2, fractionalLength);
+      }
+
+      // Combine integer and fractional parts
+      let decimalValue = integerDecimal + fractionalScaled;
+
+      document.getElementById('decimalOutput').innerText = `Decimal Value: ${decimalValue}`;
+
+      // Convert to Unix timestamp
+      let dateOutput;
+      if (decimalValue < Math.pow(2, 31)) {
+        let date = new Date(decimalValue * 1000);
+        dateOutput = `Date: ${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 
+            ${date.getHours()}시 ${date.getMinutes()}분 ${date.getSeconds()}초`;
+      } else {
+        dateOutput = "Value is too large for a Unix timestamp.";
+      }
+
+      document.getElementById('dateOutput').innerText = dateOutput;
+    }
+  </script>
+
+  <!-- ===== [JS] 눈송이 낙하 ===== -->
+  <script>
+    /**
+     * - 일정 간격으로 "❄" 눈송이 생성 (setInterval)
+     * - requestAnimationFrame으로 x,y 좌표 갱신 (아래로 이동)
+     * - 버튼과 충돌 시 해당 버튼 위에 붙은 눈송이(.anchored-snowflake)로 변경
+     * - 화면 아래 벗어나면 제거
+     */
+    const SNOWFLAKE_COUNT = 200;  // 동시에 화면에 존재 가능한 최대 눈송이 수
+    const SPAWN_INTERVAL = 400;   // 눈송이 생성 주기 (ms)
+    const FALL_SPEED_MIN = 1;     // 눈송이 낙하 최소 속도
+    const FALL_SPEED_MAX = 3;     // 눈송이 낙하 최대 속도
+    const SIZE_MIN = 16;          // 눈송이 최소 글자 크기(px)
+    const SIZE_MAX = 28;          // 눈송이 최대 글자 크기(px)
+
+    let activeSnowflakes = [];
+
+    function spawnSnowflake() {
+      if (activeSnowflakes.length >= SNOWFLAKE_COUNT) return;
+
+      const el = document.createElement('div');
+      el.className = 'snowflake';
+      el.textContent = '❄';
+
+      const size = randBetween(SIZE_MIN, SIZE_MAX);
+      const startX = Math.random() * window.innerWidth;
+      const startY = -size - 10;
+      const speed = randBetween(FALL_SPEED_MIN, FALL_SPEED_MAX);
+
+      el.style.fontSize = size + 'px';
+      el.style.transform = `translate(${startX}px, ${startY}px)`;
+
+      document.body.appendChild(el);
+      activeSnowflakes.push({ el, x: startX, y: startY, speed, size });
+    }
+
+    function updateSnowflakes() {
+      // 모든 button 엘리먼트와 충돌 체크
+      const allButtons = document.querySelectorAll('button');
+
+      for (let i = 0; i < activeSnowflakes.length; i++) {
+        const flake = activeSnowflakes[i];
+        if (!flake) continue;
+
+        // 아래로 이동
+        flake.y += flake.speed;
+
+        // 버튼과 충돌 체크
+        let anchored = false;
+        for (const btn of allButtons) {
+          const rect = btn.getBoundingClientRect();
+
+          // 눈송이의 중심 X
+          const flakeCenterX = flake.x + flake.size / 2;
+          // 눈송이의 바닥 Y
+          const flakeBottomY = flake.y + flake.size;
+
+          // 충돌 판정
+          const hit =
+            flakeBottomY >= rect.top &&
+            flakeCenterX >= rect.left &&
+            flakeCenterX <= rect.right &&
+            flake.y <= rect.bottom;
+
+          if (hit) {
+            anchorSnowflakeToButton(flake, btn, rect);
+            activeSnowflakes[i] = null;
+            anchored = true;
+            break;
+          }
+        }
+
+        // 버튼에 붙지 않았다면 화면 아래 벗어났는지 확인
+        if (!anchored) {
+          if (flake.y > window.innerHeight) {
+            flake.el.remove();
+            activeSnowflakes[i] = null;
+          } else {
+            // 계속 이동
+            flake.el.style.transform = `translate(${flake.x}px, ${flake.y}px)`;
+          }
+        }
+      }
+
+      // null 정리
+      activeSnowflakes = activeSnowflakes.filter(f => f !== null);
+
+      requestAnimationFrame(updateSnowflakes);
+    }
+
+    function anchorSnowflakeToButton(flake, btn, rect) {
+      // 눈송이 제거
+      flake.el.remove();
+
+      // 버튼 내부에 새로 붙일 눈송이
+      const anchoredEl = document.createElement('div');
+      anchoredEl.className = 'anchored-snowflake';
+      anchoredEl.textContent = '❄';
+      anchoredEl.style.fontSize = flake.size + 'px';
+
+      // 버튼 내부 좌표
+      const offsetX = flake.x - rect.left;
+      const offsetY = flake.y - rect.top;
+
+      anchoredEl.style.left = offsetX + 'px';
+      anchoredEl.style.top = offsetY + 'px';
+
+      btn.appendChild(anchoredEl);
+    }
+
+    function randBetween(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    // 초기화
+    window.addEventListener('DOMContentLoaded', () => {
+      // 눈송이 이동 루프 시작
+      requestAnimationFrame(updateSnowflakes);
+      // 일정 주기로 눈송이 계속 생성
+      setInterval(spawnSnowflake, SPAWN_INTERVAL);
+    });
+  </script>
+</body>
+</html>

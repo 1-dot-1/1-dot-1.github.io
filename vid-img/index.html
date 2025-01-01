@@ -1,432 +1,267 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>동영상 이미지 변환</title>
-  <link rel="icon" href="https://i.imgur.com/2MkyDCh.png" type="image/png" />
-  <style>
-    /* ===== [크리스마스 분위기: body 배경 + 스크롤] ===== */
-    body {
-      /* 크리스마스 느낌 배경 */
-      background: #fefefe no-repeat center center fixed;
-      background-size: cover;
-      margin: 0;
-      font-family: "Arial", sans-serif;
-      /* 스크롤 가능 */
-      overflow: auto;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>동영상 이미지 변환</title>
+    <link rel="icon" href="https://i.imgur.com/2MkyDCh.png" type="image/png">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Arial', sans-serif; /* 고딕체 스타일 적용 */
+        }
 
-      /* flex 레이아웃: 상단부터 내용이 쌓이도록 */
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      min-height: 100vh;
-    }
+        .file-input-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 720px; /* 기존의 2.4배 */
+            margin: 10px 0;
+            text-align: center; /* 중앙 정렬 추가 */
+        }
 
-    /* ===== 눈송이 기본 스타일 (JS로 움직이고, 버튼 충돌 시 앵커링) ===== */
-    .snowflake {
-      position: fixed; /* 화면을 기준으로 고정 */
-      top: 0; left: 0;
-      pointer-events: none; /* 클릭 방해 X */
-      z-index: 9999;
-      color: #8ed2ff;  /* 눈 색상 */
-      font-size: 16px;
-      will-change: transform; /* 성능 최적화 */
-    }
-    /* 버튼에 붙은(멈춘) 눈송이 스타일 */
-    .anchored-snowflake {
-      position: absolute;
-      pointer-events: none;
-      color: #8ed2ff;
-      line-height: 1;
-      white-space: nowrap;
-      user-select: none;
-    }
+        .file-input-wrapper input[type="file"] {
+            display: none;
+        }
 
-    /* ===== [헤더 스타일] ===== */
-    .header-content {
-      display: flex;
-      align-items: center;
-      justify-content: start;
-      margin-bottom: 20px;
-      font-size: 30px;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-    }
-    .header-content img {
-      margin-right: 20px;
-    }
+        .file-input-wrapper button {
+            display: block;
+            width: 100%;
+            height: 61px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            text-align: center;
+            line-height: 40px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+            font-weight: bold;
+            font-size: 30px;
+        }
 
-    /* ===== [파일 선택, 변환 버튼: 빨간색 + 앵커링 가능] ===== */
-    .file-input-wrapper {
-      position: relative;
-      width: 100%;
-      max-width: 720px;
-      margin: 10px 0;
-      text-align: center;
-    }
-    .file-input-wrapper input[type="file"] {
-      display: none;
-    }
-    .file-input-wrapper button {
-      display: block;
-      width: 100%;
-      height: 61px;
-      background-color: #c62828; /* 빨간 */
-      color: white;
-      border: none;
-      border-radius: 20px;
-      padding: 10px 20px;
-      text-align: center;
-      line-height: 40px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-      cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
-      font-weight: bold;
-      font-size: 30px;
-      position: relative;  /* 눈송이 앵커링 */
-      overflow: visible;
-    }
-    .file-input-wrapper button:hover {
-      background-color: #a21818;
-      transform: translateY(2px);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-    .file-input-wrapper button:active {
-      background-color: #670c0c;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
+        .file-input-wrapper button:hover {
+            background-color: #005BDD;
+            transform: translateY(2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
 
-    #fileName {
-      margin: 10px 0;
-      font-size: 25px;
-      text-align: center;
-    }
+        .file-input-wrapper button:active {
+            background-color: #0026a3;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
 
-    button#extractFrames {
-      background-color: #c62828; /* 동일 빨간 계열 */
-      color: white;
-      border: none;
-      border-radius: 20px;
-      padding: 10px 20px;
-      margin: 20px 0;
-      width: 100%;
-      max-width: 720px;
-      height: 61px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-      cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
-      font-weight: bold;
-      font-size: 30px;
-      text-align: center;
-      position: relative; /* 눈송이 앵커링 */
-      overflow: visible;
-    }
-    button#extractFrames:hover {
-      background-color: #a21818;
-      transform: translateY(2px);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-    button#extractFrames:active {
-      background-color: #670c0c;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
+        #fileName {
+            margin: 10px 0;
+            font-size: 25px;
+            text-align: center; /* 중앙 정렬 추가 */
+        }
 
-    #loading {
-      display: none;
-      text-align: center;
-      margin-bottom: 20px;
-      position: relative;
-      width: 100%;
-      max-width: 864px;
-    }
-    #progress {
-      width: 100%;
-      background-color: #f3f3f3;
-      border-radius: 24px;
-      height: 24px;
-      margin: 0 auto;
-      position: relative;
-    }
-    #progress-bar {
-      width: 0%;
-      height: 100%;
-      background-color: #c62828; /* 빨간 */
-      border-radius: 24px;
-    }
-    #progress-text {
-      position: absolute;
-      width: 100%;
-      top: 0;
-      left: 0;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: bold;
-    }
+        button#extractFrames {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            margin: 20px 0;
+            width: 100%;
+            max-width: 720px; /* 기존의 2.4배 */
+            height: 61px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+            font-weight: bold;
+            font-size: 30px;
+            text-align: center;
+        }
 
-    .container {
-      text-align: center;
-      width: 100%;
-      max-width: 720px;
-      margin: 0 auto;
-    }
-  </style>
+        button#extractFrames:hover {
+            background-color: #005BDD;
+            transform: translateY(2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        button#extractFrames:active {
+            background-color: #0026a3;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        #loading {
+            display: none;
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            width: 100%; /* 100%로 조정 */
+            max-width: 864px; /* 720px의 1.2배 */
+        }
+
+        #progress {
+            width: 100%;
+            background-color: #f3f3f3;
+            border-radius: 24px; /* 15px의 1.6배 */
+            height: 24px; /* 15px의 1.6배 */
+            margin: 0 auto;
+            position: relative;
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background-color: #007BFF; /* 파랑색 */
+            border-radius: 24px; /* 15px의 1.6배 */
+        }
+
+        #progress-text {
+            position: absolute;
+            width: 100%;
+            top: 0;
+            left: 0;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .container {
+            text-align: center;
+            width: 100%;
+            max-width: 720px; /* 기존의 2.4배 */
+            margin: 0 auto;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: start;
+            margin-bottom: 20px;
+            font-size: 30px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .header-content img {
+            margin-right: 20px;
+        }
+    </style>
 </head>
 <body>
-  <!-- 상단 헤더 -->
-  <div class="header-content">
-    <img
-      src="https://i.imgur.com/2MkyDCh.png"
-      alt="Logo"
-      style="width: 120px; height: auto"
-    />
-    <h1>파란행성 동영상 변환 사이트</h1>
-  </div>
-
-  <div class="container">
-    <!-- 파일 선택 버튼 -->
-    <div class="file-input-wrapper">
-      <input type="file" id="videoInput" accept="video/*" />
-      <button id="fileButton">파일 선택</button>
+    <div class="header-content">
+        <img src="https://i.imgur.com/2MkyDCh.png" alt="Logo" style="width: 120px; height: auto;">
+        <h1>파란행성 동영상 변환 사이트</h1>
     </div>
-    <div id="fileName">선택된 파일 없음</div>
-
-    <!-- 진행률 표시 -->
-    <div id="loading">
-      <div id="progress">
-        <div id="progress-bar"></div>
-        <div id="progress-text">0%</div>
-      </div>
+    <div class="container">
+        <div class="file-input-wrapper">
+            <input type="file" id="videoInput" accept="video/*">
+            <button id="fileButton">파일 선택</button>
+        </div>
+        <div id="fileName">선택된 파일 없음</div>
+        <div id="loading">
+            <div id="progress">
+                <div id="progress-bar"></div>
+                <div id="progress-text">0%</div>
+            </div>
+        </div>
+        <button id="extractFrames">변환</button>
+        <div id="framesContainer"></div>
     </div>
-
-    <!-- 변환 버튼 -->
-    <button id="extractFrames">변환</button>
-    <!-- 변환 결과 표시 영역 -->
-    <div id="framesContainer"></div>
-  </div>
-
-  <!-- JSZip 라이브러리 -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.6.0/jszip.min.js"></script>
-  <!-- 메인 스크립트 -->
-  <script>
-    document.getElementById("fileButton").addEventListener("click", () => {
-      document.getElementById("videoInput").click();
-    });
-
-    document.getElementById("videoInput").addEventListener("change", (event) => {
-      const fileName = event.target.files[0]
-        ? event.target.files[0].name
-        : "선택된 파일 없음";
-      document.getElementById("fileName").textContent = fileName;
-    });
-
-    document.getElementById("extractFrames").addEventListener("click", () => {
-      const videoInput = document.getElementById("videoInput").files[0];
-      if (!videoInput) return;
-
-      document.getElementById("loading").style.display = "block";
-
-      const video = document.createElement("video");
-      video.src = URL.createObjectURL(videoInput);
-      video.muted = true;
-      video.play();
-
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      const zip = new JSZip();
-
-      video.addEventListener("loadeddata", () => {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        let frames = [];
-        let folderNumber = 0;
-        let frameNumber = 0;
-        const fps = 30; // Assume 30 fps
-        const totalFrames = Math.floor(video.duration * fps);
-
-        const captureFrame = () => {
-          if (video.currentTime >= video.duration) {
-            // 남은 frames가 있다면 저장
-            if (frames.length > 0) {
-              saveFrames(frames, folderNumber);
-            }
-            finalizeZip();
-            return;
-          }
-
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          canvas.toBlob((blob) => {
-            frames.push(blob);
-
-            if (frames.length === 10) {
-              saveFrames(frames, folderNumber);
-              frames = [];
-              folderNumber++;
-            }
-
-            frameNumber++;
-            updateProgress(frameNumber, totalFrames);
-
-            // 다음 프레임으로 이동
-            video.currentTime += 1 / fps;
-          });
-
-          if (video.currentTime < video.duration) {
-            requestAnimationFrame(captureFrame);
-          }
-        };
-
-        captureFrame();
-      });
-
-      function saveFrames(frames, folderNumber) {
-        const folder = zip.folder(`frames_${folderNumber}`);
-        frames.forEach((frame, index) => {
-          folder.file(`frame${folderNumber * 10 + index}.png`, frame);
+    <script>
+        document.getElementById('fileButton').addEventListener('click', () => {
+            document.getElementById('videoInput').click();
         });
-      }
 
-      function finalizeZip() {
-        zip.generateAsync({ type: "blob" }).then((content) => {
-          const a = document.createElement("a");
-          a.href = URL.createObjectURL(content);
-          a.download = `video_frames.zip`;
-          a.click();
-          document.getElementById("loading").style.display = "none";
+        document.getElementById('videoInput').addEventListener('change', (event) => {
+            const fileName = event.target.files[0] ? event.target.files[0].name : '선택된 파일 없음';
+            document.getElementById('fileName').textContent = fileName;
         });
-      }
 
-      function updateProgress(currentFrame, totalFrames) {
-        const progressText = document.getElementById("progress-text");
-        const progressBar = document.getElementById("progress-bar");
-        const progress = Math.floor((currentFrame / totalFrames) * 100);
-        progressText.textContent = `${progress}%`;
-        progressBar.style.width = `${progress}%`;
-      }
-    });
-  </script>
+        document.getElementById('extractFrames').addEventListener('click', () => {
+            const videoInput = document.getElementById('videoInput').files[0];
+            if (!videoInput) return;
 
-  <!-- ===== [JS] 눈송이 낙하 + 버튼 충돌(앵커링) ===== -->
-  <script>
-    /**
-     * - 일정 간격으로 "❄" 눈송이 생성 (setInterval)
-     * - requestAnimationFrame으로 x,y 좌표 갱신 (아래로 이동)
-     * - "button"과 충돌 시 버튼 내부에 눈송이(.anchored-snowflake)로 고정
-     * - 화면 아래 벗어나면 제거
-     */
-    const SNOWFLAKE_COUNT = 200;  // 동시에 화면에 존재 가능한 최대 눈송이 수
-    const SPAWN_INTERVAL = 400;   // 눈송이 생성 주기 (ms)
-    const FALL_SPEED_MIN = 1;     // 최소 낙하 속도
-    const FALL_SPEED_MAX = 3;     // 최대 낙하 속도
-    const SIZE_MIN = 16;          // 눈송이 최소 글자 크기(px)
-    const SIZE_MAX = 28;          // 눈송이 최대 글자 크기(px)
+            document.getElementById('loading').style.display = 'block';
 
-    let activeSnowflakes = [];
+            const video = document.createElement('video');
+            video.src = URL.createObjectURL(videoInput);
+            video.muted = true;
+            video.play();
 
-    function spawnSnowflake() {
-      if (activeSnowflakes.length >= SNOWFLAKE_COUNT) return;
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const zip = new JSZip();
 
-      const el = document.createElement("div");
-      el.className = "snowflake";
-      el.textContent = "❄";
+            video.addEventListener('loadeddata', () => {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                let frames = [];
+                let folderNumber = 0;
+                let frameNumber = 0;
+                const totalFrames = Math.floor(video.duration * 30); // Assume 30 fps
 
-      // 랜덤 크기, 위치, 속도
-      const size = randBetween(SIZE_MIN, SIZE_MAX);
-      const startX = Math.random() * window.innerWidth;
-      const startY = -size - 10;
-      const speed = randBetween(FALL_SPEED_MIN, FALL_SPEED_MAX);
+                const captureFrame = () => {
+                    if (video.currentTime >= video.duration) {
+                        if (frames.length > 0) {
+                            saveFrames(frames, folderNumber); // Save remaining frames
+                        }
+                        finalizeZip();
+                        return;
+                    }
 
-      el.style.fontSize = size + "px";
-      el.style.transform = `translate(${startX}px, ${startY}px)`;
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    canvas.toBlob(blob => {
+                        frames.push(blob);
 
-      document.body.appendChild(el);
-      activeSnowflakes.push({ el, x: startX, y: startY, speed, size });
-    }
+                        if (frames.length === 10) {
+                            saveFrames(frames, folderNumber);
+                            frames = [];
+                            folderNumber++;
+                        }
 
-    function updateSnowflakes() {
-      // 모든 버튼들과 충돌 체크
-      const allButtons = document.querySelectorAll("button");
+                        frameNumber++;
+                        updateProgress(frameNumber, totalFrames);
+                        video.currentTime += 1 / 30; // Capture every frame (30fps)
+                    });
 
-      for (let i = 0; i < activeSnowflakes.length; i++) {
-        const flake = activeSnowflakes[i];
-        if (!flake) continue;
+                    if (video.currentTime < video.duration) {
+                        requestAnimationFrame(captureFrame);
+                    }
+                };
 
-        // 아래로 이동
-        flake.y += flake.speed;
+                captureFrame();
+            });
 
-        let anchored = false;
-        for (const btn of allButtons) {
-          const rect = btn.getBoundingClientRect();
+            function saveFrames(frames, folderNumber) {
+                const folder = zip.folder(`frames_${folderNumber}`);
+                frames.forEach((frame, index) => {
+                    folder.file(`frame${folderNumber * 10 + index}.png`, frame);
+                });
+            }
 
-          // 눈송이 중심 X
-          const flakeCenterX = flake.x + flake.size / 2;
-          // 눈송이 바닥 Y
-          const flakeBottomY = flake.y + flake.size;
+            function finalizeZip() {
+                zip.generateAsync({ type: "blob" }).then(content => {
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(content);
+                    a.download = `video_frames.zip`;
+                    a.click();
+                    document.getElementById('loading').style.display = 'none';
+                });
+            }
 
-          // 충돌 판정
-          const hit =
-            flakeBottomY >= rect.top &&
-            flakeCenterX >= rect.left &&
-            flakeCenterX <= rect.right &&
-            flake.y <= rect.bottom; // 윗 부분이 버튼 하단보다 위에 있어야
-
-          if (hit) {
-            anchorSnowflakeToButton(flake, btn, rect);
-            activeSnowflakes[i] = null;
-            anchored = true;
-            break;
-          }
-        }
-
-        // 버튼에 붙지 않았고 화면 아래 벗어나면 제거
-        if (!anchored) {
-          if (flake.y > window.innerHeight) {
-            flake.el.remove();
-            activeSnowflakes[i] = null;
-          } else {
-            flake.el.style.transform = `translate(${flake.x}px, ${flake.y}px)`;
-          }
-        }
-      }
-
-      // null 제거
-      activeSnowflakes = activeSnowflakes.filter((f) => f !== null);
-
-      requestAnimationFrame(updateSnowflakes);
-    }
-
-    function anchorSnowflakeToButton(flake, btn, rect) {
-      // 화면에 있던 눈송이 제거
-      flake.el.remove();
-
-      // 새 DOM 요소를 버튼 내부에 붙임
-      const anchoredEl = document.createElement("div");
-      anchoredEl.className = "anchored-snowflake";
-      anchoredEl.textContent = "❄";
-      anchoredEl.style.fontSize = flake.size + "px";
-
-      // 버튼 내부 좌표
-      const offsetX = flake.x - rect.left;
-      const offsetY = flake.y - rect.top;
-
-      anchoredEl.style.left = offsetX + "px";
-      anchoredEl.style.top = offsetY + "px";
-
-      btn.appendChild(anchoredEl);
-    }
-
-    function randBetween(min, max) {
-      return Math.random() * (max - min) + min;
-    }
-
-    // 초기화
-    window.addEventListener("DOMContentLoaded", () => {
-      requestAnimationFrame(updateSnowflakes);
-      setInterval(spawnSnowflake, SPAWN_INTERVAL);
-    });
-  </script>
+            function updateProgress(currentFrame, totalFrames) {
+                const progressText = document.getElementById('progress-text');
+                const progressBar = document.getElementById('progress-bar');
+                const progress = Math.floor((currentFrame / totalFrames) * 100);
+                progressText.textContent = `${progress}%`;
+                progressBar.style.width = `${progress}%`;
+            }
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.6.0/jszip.min.js"></script>
 </body>
 </html>

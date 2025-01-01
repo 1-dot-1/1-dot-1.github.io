@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>효과를 적용한 배사 만들기</title>
+  <link rel="icon" href="https://i.imgur.com/2MkyDCh.png" type="image/png">
+  <style>
+    /* ===== [크리스마스 분위기: 배경 + 스크롤 숨김] ===== */
+    body {
+      /* 크리스마스 느낌 배경 */
+      background: #fefefe no-repeat center center fixed;
+      background-size: cover;
+      position: relative;
+      overflow: hidden; /* 눈송이가 화면 밖을 넘어가지 않도록 */
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    .file-upload-wrapper {
+      text-align: center;
+      background-color: #ffffff;
+      border-radius: 15px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0);
+      min-width: 350px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: auto;
+    }
+
+    /* ===== [헤더 스타일] ===== */
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: start;
+      margin-bottom: 20px;
+      font-size: 30px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    .header-content img {
+      margin-right: 20px;
+    }
+
+    /* ===== [버튼: 빨간색 + position: relative] ===== */
+    button {
+      background-color: #c62828; /* 레드 */
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 20px;
+      margin: 100px 0; /* Adjust the margin as needed */
+      width: 600px;    /* Fixed width */
+      height: 61px;    /* Fixed height */
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+      font-weight: bold;
+      font-size: 30px;
+      position: relative;  /* 버튼 위에 눈송이 앵커링 */
+      overflow: visible;
+    }
+    button:hover {
+      background-color: #a21818;
+      transform: translateY(2px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    button:active {
+      background-color: #670c0c;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    #file-name {
+      margin: 10px 0;
+      font-weight: bold;
+      font-size: 30px;
+    }
+
+    #hidden-file-input {
+      display: none;
+    }
+
+    #effect-selector {
+      font-size: 30px;
+      padding: 10px 20px;
+      height: 60px;
+      width: 300px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    /* ===== 눈송이 기본 스타일 (JS로 움직이므로 위치는 transform으로 제어) ===== */
+    .snowflake {
+      position: fixed;       /* 화면 기준 고정 */
+      top: 0; left: 0;
+      pointer-events: none;  /* 마우스 이벤트 방해 X */
+      z-index: 9999;
+      color: #8ed2ff;        /* 눈 색상 */
+      font-size: 16px;
+      will-change: transform; /* 성능 최적화용 */
+    }
+
+    /* 버튼에 붙은(멈춘) 눈송이 스타일 */
+    .anchored-snowflake {
+      position: absolute;
+      pointer-events: none;
+      color: #8ed2ff;
+      line-height: 1;
+      white-space: nowrap;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="file-upload-wrapper">
+    <div class="header-content">
+      <img src="https://i.imgur.com/2MkyDCh.png" alt="Logo" style="width: 120px; height: auto;">
+      <h1>파란행성 SVG 변환 사이트</h1>
+    </div>
+    <button id="custom-button">여기를 클릭해 사진을 선택하세요</button>
+    <input type="file" id="hidden-file-input" accept="image/png, image/jpg, image/jpeg, image/bmp">
+    <div id="file-name">파일이 선택되지 않았습니다.</div>
+
+    <select id="effect-selector">
+      <!-- 원본 코드에서 이미 여러 옵션이 있으므로, 중복 방지 위해 직접 추가 X -->
+      <!-- 필요 시 여기에 <option> 추가 가능 -->
+      <option value="회전">회전</option>
+      <option value="크기이동">크기이동</option>
+      <option value="이동">이동</option>
+      <option value="불투명도">불투명도</option>
+      <option value="무한배경">무한배경</option>
+      <option value="무지개">무지개</option>
+      <option value="흔들림">흔들림</option>
+      <option value="흑백변환">흑백변환</option>
+      <option value="색상반전">색상반전</option>
+      <option value="빛나기">빛나기</option>
+      <option value="분쇄기">분쇄기</option>
+      <option value="칼질">칼질</option>
+      <option value="위아래로 부풀기">위아래로 부풀기</option>
+      <option value="좌우로 이동">좌우로 이동</option>
+      <option value="섬광탄">섬광탄</option>
+      <option value="위로 사라지기">위로 사라지기</option>
+      <option value="색조 강조">색조 강조</option>
+      <option value="상하로 흔들림">상하로 흔들림</option>
+      <option value="빠른 무지개">빠른 무지개</option>
+      <option value="확대 후 축소">확대 후 축소</option>
+      <option value="심장 박동">심장 박동</option>
+      <option value="빠른 불투명도">빠른 불투명도</option>
+      <option value="옆으로 튀기기">옆으로 튀기기</option>
+    </select>
+
+    <button id="upload-button">여기를 클릭해 다운로드</button>
+  </div>
+
+  <script>
+    // 효과 목록을 객체로 추가합니다.
+    var effects = {
+      "회전": '@keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }\n.animated { animation: rotate 5s linear infinite; transform-origin: center; }\n',
+      "크기이동": '@keyframes scale { 0% { transform: scale(1); } 50% { transform: scale(1.5); } 100% { transform: scale(1); } }\n.animated { animation: scale 5s linear infinite; }\n',
+      "이동": '@keyframes move {\n    0% { transform: translate(0px, 0px); }\n    25% { transform: translate(100px, -100px); }\n    50% { transform: translate(200px, 0px); }\n    75% { transform: translate(100px, 100px); }\n    100% { transform: translate(0px, 0px); }\n}\n.animated { animation: move 10s linear infinite; }\n',
+      "불투명도": '@keyframes opacity { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }\n.animated { animation: opacity 5s linear infinite; }\n',
+      "무한배경": '@keyframes continuousSlide {\n    0% { transform: translateY(100%); }\n    100% { transform: translateY(-100%); }\n}\n.animated { animation: continuousSlide 5s linear infinite; }\n.animated2 { animation: continuousSlide 5s linear infinite; animation-delay: -2.5s; }\n',
+      "무지개": '@keyframes rainbow { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }\n.animated { animation: rainbow 5s linear infinite; }\n',
+      "흔들림": '@keyframes shake { 0% { transform: translateX(0px); } 25% { transform: translateX(-100px); } 50% { transform: translateX(100px); } 75% { transform: translateX(-100px); } 100% { transform: translateX(0px); } }\n.animated { animation: shake 0.1s linear infinite; }\n',
+      "흑백변환": '@keyframes blackWhiteToColor {\n    0%, 100% { filter: grayscale(100%); }\n    50% { filter: grayscale(0%); }\n}\n.animated { animation: blackWhiteToColor 10s linear infinite; }\n',
+      "색상반전": '@keyframes invert { 0% { filter: invert(0%); } 50% { filter: invert(100%); } 100% { filter: invert(0%); } }\n.animated { animation: invert 3s linear infinite; }\n',
+      "빛나기": '@keyframes glow { 0% { filter: brightness(1); } 50% { filter: brightness(1.5); } 100% { filter: brightness(1); } }\n.animated { animation: glow 2s ease-in-out infinite; }\n',
+      "분쇄기": '@keyframes rotateJump { 0% { transform: translateY(0) rotate(0deg); } 25% { transform: translateY(-15px) rotate(90deg); } 50% { transform: translateY(-30px) rotate(180deg); } 75% { transform: translateY(-15px) rotate(270deg); } 100% { transform: translateY(0) rotate(360deg); } }\n.animated { animation: rotateJump 0.1s ease-in-out infinite; }\n',
+      "칼질": '@keyframes swing { 0%, 100% { transform: translateX(0px) rotate(0deg); } 25% { transform: translateX(-150px) rotate(-100deg); } 50% { transform: translateX(150px) rotate(100deg); } 75% { transform: translateX(-150px) rotate(-100deg); } }\n.animated { animation: swing 2s ease-in-out infinite; }\n',
+      "위아래로 부풀기": '@keyframes pulse { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.1); } }\n.animated { animation: pulse 2s ease-in-out infinite; }\n',
+      "좌우로 이동": '@keyframes slide { 0% { transform: translateX(-100px); } 50% { transform: translateX(100px); } 100% { transform: translateX(-100px); } }\n.animated { animation: slide 3s ease-in-out infinite; }\n',
+      "섬광탄": '@keyframes glow { 0% { filter: brightness(0); } 50% { filter: brightness(3); } 100% { filter: brightness(0); } }\n.animated { animation: glow 1s ease-in-out infinite; }\n',
+      "위로 사라지기": '@keyframes flip { 0%, 100% { transform: rotateX(0deg); } 25% { transform: rotateX(90deg); } 50% { transform: rotateX(180deg); } 75% { transform: rotateX(270deg); } }\n.animated { animation: flip 3s linear infinite; }\n',
+      "색조 강조": '@keyframes colorBoost { 0%, 100% { filter: brightness(100%) contrast(100%); } 50% { filter: brightness(60%) contrast(400%); } }\n.animated { animation: colorBoost 2s ease-in-out infinite; }\n',
+      "상하로 흔들림": '@keyframes verticalShake { 0%, 100% { transform: translateY(15px); } 50% { transform: translateY(-15px); } }\n.animated { animation: verticalShake 0.5s linear infinite; }\n',
+      "빠른 무지개": '@keyframes colorShift { 0% { filter: hue-rotate(0deg); } 25% { filter: hue-rotate(90deg); } 50% { filter: hue-rotate(180deg); } 75% { filter: hue-rotate(270deg); } 100% { filter: hue-rotate(360deg); } }\n.animated { animation: colorShift 0.5s linear infinite; }\n',
+      "확대 후 축소": '@keyframes zoomInOut { 0%, 100% { transform: scale(1); } 50% { transform: scale(5); } }\n.animated { animation: zoomInOut 3s linear infinite; }\n',
+      "심장 박동": '@keyframes heartbeat { 0%, 100% { transform: scale(1); } 25%, 75% { transform: scale(1.2); } }\n.animated { animation: heartbeat 1s linear infinite; }\n',
+      "빠른 불투명도": '@keyframes fadeInOut { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }\n.animated { animation: fadeInOut 1s linear infinite; }\n',
+      "옆으로 튀기기": '@keyframes reflection { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(0); } }\n.animated { animation: reflection 3s linear infinite; }\n'
+    };
+
+    // 파일 선택 버튼 이벤트
+    document.getElementById('custom-button').addEventListener('click', function() {
+      document.getElementById('hidden-file-input').click();
+    });
+
+    // 파일이 선택되면 이름 표시
+    document.getElementById('hidden-file-input').addEventListener('change', function() {
+      const fileNameDisplay = document.getElementById('file-name');
+      if (this.files && this.files[0]) {
+        fileNameDisplay.textContent = this.files[0].name;
+      }
+    });
+
+    // SVG 다운로드 버튼 이벤트
+    document.getElementById('upload-button').addEventListener('click', function() {
+      const file = document.getElementById('hidden-file-input').files[0];
+      const effectSelector = document.getElementById('effect-selector');
+      const effect = effectSelector.value;
+
+      if (!file) {
+        alert('파일을 선택한 후 다운로드가 가능합니다.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          // 선택된 효과의 CSS를 가져옴
+          const selectedEffectStyle = effects[effect] || '';
+
+          // 이미지 크기에 맞춰 SVG 생성
+          const svgData = `
+<svg width="${this.width}px" height="${this.height}px" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    ${selectedEffectStyle}
+  </style>
+  <image href="${e.target.result}" width="${this.width}" height="${this.height}" class="animated"/>
+</svg>`;
+
+          // 다운로드 링크 생성
+          const downloadLink = document.createElement('a');
+          downloadLink.href = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+          downloadLink.download = 'animated_image.svg';
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  </script>
+
+  <!-- ===== [JS] 눈송이 낙하 ===== -->
+  <script>
+    /**
+     * - 일정 간격으로 "❄" 눈송이 생성 (setInterval)
+     * - requestAnimationFrame으로 x,y 좌표 갱신 (아래로 이동)
+     * - 버튼과 충돌 시 해당 버튼 위에 눈송이(.anchored-snowflake)로 변경
+     * - 화면 아래 벗어나면 제거
+     */
+
+    const SNOWFLAKE_COUNT = 200;  // 동시에 화면에 존재 가능한 최대 눈송이 수
+    const SPAWN_INTERVAL = 400;   // 눈송이 생성 주기 (ms)
+    const FALL_SPEED_MIN = 1;     // 눈송이 낙하 최소 속도
+    const FALL_SPEED_MAX = 3;     // 눈송이 낙하 최대 속도
+    const SIZE_MIN = 16;          // 눈송이 최소 글자 크기(px)
+    const SIZE_MAX = 28;          // 눈송이 최대 글자 크기(px)
+
+    let activeSnowflakes = [];
+
+    // 눈송이 생성
+    function spawnSnowflake() {
+      if (activeSnowflakes.length >= SNOWFLAKE_COUNT) return;
+
+      const el = document.createElement('div');
+      el.className = 'snowflake';
+      el.textContent = '❄'; // 눈송이 문자
+
+      const size = randBetween(SIZE_MIN, SIZE_MAX);
+      const startX = Math.random() * window.innerWidth;
+      const startY = -size - 10;
+      const speed = randBetween(FALL_SPEED_MIN, FALL_SPEED_MAX);
+
+      el.style.fontSize = size + 'px';
+      el.style.transform = `translate(${startX}px, ${startY}px)`;
+
+      document.body.appendChild(el);
+      activeSnowflakes.push({ el, x: startX, y: startY, speed, size });
+    }
+
+    // 눈송이 위치 업데이트
+    function updateSnowflakes() {
+      const allButtons = document.querySelectorAll('button');
+
+      for (let i = 0; i < activeSnowflakes.length; i++) {
+        const flake = activeSnowflakes[i];
+        if (!flake) continue;
+
+        // 아래로 이동
+        flake.y += flake.speed;
+
+        // 버튼과 충돌 체크
+        let anchored = false;
+        for (const btn of allButtons) {
+          const rect = btn.getBoundingClientRect();
+
+          // 눈송이의 중심 X
+          const flakeCenterX = flake.x + flake.size / 2;
+          // 눈송이의 바닥 Y
+          const flakeBottomY = flake.y + flake.size;
+
+          // 충돌 판정
+          const hit =
+            flakeBottomY >= rect.top &&
+            flakeCenterX >= rect.left &&
+            flakeCenterX <= rect.right &&
+            flake.y <= rect.bottom;
+
+          if (hit) {
+            anchorSnowflakeToButton(flake, btn, rect);
+            activeSnowflakes[i] = null;
+            anchored = true;
+            break;
+          }
+        }
+
+        // 버튼에 붙지 않고 화면 아래 벗어나면 제거
+        if (!anchored) {
+          if (flake.y > window.innerHeight) {
+            flake.el.remove();
+            activeSnowflakes[i] = null;
+          } else {
+            // 위치 갱신
+            flake.el.style.transform = `translate(${flake.x}px, ${flake.y}px)`;
+          }
+        }
+      }
+
+      // null 정리
+      activeSnowflakes = activeSnowflakes.filter(f => f !== null);
+      requestAnimationFrame(updateSnowflakes);
+    }
+
+    // 버튼 위에 눈송이 붙이기
+    function anchorSnowflakeToButton(flake, btn, rect) {
+      flake.el.remove(); // 기존 눈송이 제거
+
+      const anchoredEl = document.createElement('div');
+      anchoredEl.className = 'anchored-snowflake';
+      anchoredEl.textContent = '❄';
+      anchoredEl.style.fontSize = flake.size + 'px';
+
+      // 버튼 내부 좌표
+      const offsetX = flake.x - rect.left;
+      const offsetY = flake.y - rect.top;
+
+      anchoredEl.style.left = offsetX + 'px';
+      anchoredEl.style.top = offsetY + 'px';
+
+      btn.appendChild(anchoredEl);
+    }
+
+    // 랜덤 범위 함수
+    function randBetween(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    // 초기화
+    window.addEventListener('DOMContentLoaded', () => {
+      // 눈송이 이동 시작
+      requestAnimationFrame(updateSnowflakes);
+      // 일정 주기로 눈송이 생성
+      setInterval(spawnSnowflake, SPAWN_INTERVAL);
+    });
+  </script>
+</body>
+</html>

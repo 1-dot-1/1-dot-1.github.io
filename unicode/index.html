@@ -1,458 +1,297 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>특수문자 복사</title>
-  <link
-    rel="icon"
-    href="https://i.imgur.com/2MkyDCh.png"
-    type="image/png"
-  />
-  <style>
-    /* ===== [크리스마스 분위기: body 배경 + 스크롤 숨김] ===== */
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>특수문자 복사</title>
+<link rel="icon" href="https://i.imgur.com/2MkyDCh.png" type="image/png">
+<style>
     body {
-      /* 크리스마스 느낌 배경 */
-      background: #fefefe no-repeat center center fixed;
-      background-size: cover;
-      position: relative;
-
-      margin: 0;
-      font-family: Arial, sans-serif;
-      color: #333;
-      padding: 20px;
+        font-family: Arial, sans-serif;
+        background-color: #ffffff;
+        color: #333;
+        padding: 20px;
     }
-
     h1 {
-      text-align: center;
-      color: #000000;
+        text-align: center;
+        color: #000000;
     }
-    .header-content {
-      display: flex;
-      align-items: center;
-      justify-content: start;
-      margin-bottom: 20px;
-      font-size: 30px;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-    }
-    .header-content img {
-      margin-right: 20px;
-    }
-
     .unicode-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
     }
-
-    /* ===== [클릭 가능한 .unicode-char: position: relative로 눈송이 앵커링] ===== */
     .unicode-char {
-      font-size: 24px;
-      padding: 10px;
-      background-color: #f3f3f3;
-      border: 1px solid #c9c9c9;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: transform 0.2s, background-color 0.2s;
-      position: relative; /* 눈송이 붙이기 위해 */
-      overflow: visible;
+        font-size: 24px;
+        padding: 10px;
+        background-color: #f3f3f3;
+        border: 1px solid #c9c9c9;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: transform 0.2s, background-color 0.2s;
     }
     .unicode-char:hover {
-      transform: scale(1.2);
-      background-color: #f3f3f3;
+        transform: scale(1.2);
+        background-color: #f3f3f3;
     }
     .unicode-char:active {
-      transform: scale(1.1);
-      background-color: #e0e0e0;
+        transform: scale(1.1);
+        background-color: #e0e0e0;
+    }
+
+    .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: start;
+            margin-bottom: 20px;
+            font-size: 30px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .header-content img {
+            margin-right: 20px;
     }
 
     .copy-text {
-      font-weight: bold;
-      font-size: 20px;
-      background-color: rgb(0, 148, 44);
-      color: rgb(0, 255, 13);
+        font-weight: bold;
+        font-size: 20px;
+        background-color: rgb(0, 148, 44);
+        color: rgb(0, 255, 13);
     }
 
-    /* ===== 눈송이 기본 스타일 (JS로 움직임) ===== */
-    .snowflake {
-      position: fixed;       /* 화면을 기준으로 고정 */
-      top: 0; left: 0;
-      pointer-events: none;  /* 클릭 방지 */
-      z-index: 9999;
-      color: #8ed2ff;        /* 눈 색상 */
-      font-size: 16px;
-      will-change: transform; /* 성능 최적화용 */
-    }
-
-    /* .unicode-char에 붙은(멈춘) 눈송이 스타일 */
-    .anchored-snowflake {
-      position: absolute;
-      pointer-events: none;
-      color: #8ed2ff;
-      line-height: 1;
-      white-space: nowrap;
-      user-select: none;
-    }
-  </style>
-
-  <script>
+</style>
+<script>
     function generateUnicodeRange(start, end) {
-      let range = "";
-      for (let i = start; i <= end; i++) {
-        range += `<span class="unicode-char" onclick="copyToClipboard('${String.fromCharCode(
-          i
-        )}')">${String.fromCharCode(i)}</span>`;
-      }
-      return range;
+        let range = "";
+        for (let i = start; i <= end; i++) {
+            range += `<span class="unicode-char" onclick="copyToClipboard('${String.fromCharCode(i)}')">${String.fromCharCode(i)}</span>`;
+        }
+        return range;
     }
 
     function copyToClipboard(text) {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard
-          .writeText(text)
-          .then(() => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
             alert(`${text} 복사되었습니다!`);
-          })
-          .catch((err) => {
-            alert("복사에 실패했습니다.");
-          });
-      } else {
+        }).catch(err => {
+            alert('복사에 실패했습니다.');
+        });
+    } else {
         // Fallback for older browsers
         let textArea = document.createElement("textarea");
         textArea.value = text;
-        textArea.style.position = "fixed"; // Avoid scrolling to bottom
+        textArea.style.position = "fixed";  // Avoid scrolling to bottom
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
         try {
-          document.execCommand("copy");
-          alert(`${text} 복사되었습니다!`);
+            document.execCommand('copy');
+            alert(`${text} 복사되었습니다!`);
         } catch (err) {
-          alert("복사에 실패했습니다.");
+            alert('복사에 실패했습니다.');
         }
         document.body.removeChild(textArea);
-      }
     }
+}
+
 
     function displayUnicode() {
-      const range1 = generateUnicodeRange(0xa960, 0xa97f);
-      const range2 = generateUnicodeRange(0xa980, 0xa9df);
-      const range3 = generateUnicodeRange(0xaa80, 0xaadf);
-      const range4 = generateUnicodeRange(0xa490, 0xa4cf);
-      const range5 = generateUnicodeRange(0xa4d0, 0xa4ff);
-      const range6 = generateUnicodeRange(0xa500, 0xa63f);
-      const range7 = generateUnicodeRange(0xa640, 0xa69f);
-      const range8 = generateUnicodeRange(0xa700, 0xa71f);
-      const range9 = generateUnicodeRange(0xa720, 0xa7ff);
-      const range10 = generateUnicodeRange(0xa830, 0xa83f);
-      const range11 = generateUnicodeRange(0xa840, 0xa87f);
-      const range12 = generateUnicodeRange(0xa880, 0xa8df);
-      const range13 = generateUnicodeRange(0xa8e0, 0xa8ff);
-      const range14 = generateUnicodeRange(0xa900, 0xa92f);
-      const range15 = generateUnicodeRange(0xa9e0, 0xa9ff);
-      const range16 = generateUnicodeRange(0xaa00, 0xaa5f);
-      const range17 = generateUnicodeRange(0xaa60, 0xaa7f);
-      const range18 = generateUnicodeRange(0xab00, 0xab2f);
-      const range19 = generateUnicodeRange(0xab30, 0xab6f);
-      const range20 = generateUnicodeRange(0xab70, 0xabbf);
-      const range21 = generateUnicodeRange(0xabc0, 0xabff);
-      const range22 = generateUnicodeRange(0x3200, 0x32ff);
-      const range23 = generateUnicodeRange(0x3300, 0x33ff);
-      const range24 = generateUnicodeRange(0x31f0, 0x31ff);
-      const range25 = generateUnicodeRange(0x31c0, 0x31ef);
-      const range26 = generateUnicodeRange(0x31a0, 0x31bf);
-      const range27 = generateUnicodeRange(0x3190, 0x319f);
-      const range28 = generateUnicodeRange(0x3130, 0x318f);
-      const range29 = generateUnicodeRange(0xa000, 0xa48f);
+    const range1 = generateUnicodeRange(0xA960, 0xA97F);
+    const range2 = generateUnicodeRange(0xA980, 0xA9DF);
+    const range3 = generateUnicodeRange(0xAA80, 0xAADF);
+    const range4 = generateUnicodeRange(0xA490, 0xA4CF);
+    const range5 = generateUnicodeRange(0xA4D0, 0xA4FF);
+    const range6 = generateUnicodeRange(0xA500, 0xA63F);
+    const range7 = generateUnicodeRange(0xA640, 0xA69F);
+    const range8 = generateUnicodeRange(0xA700, 0xA71F);
+    const range9 = generateUnicodeRange(0xA720, 0xA7FF);
+    const range10 = generateUnicodeRange(0xA830, 0xA83F);
+    const range11 = generateUnicodeRange(0xA840, 0xA87F);
+    const range12 = generateUnicodeRange(0xA880, 0xA8DF);
+    const range13 = generateUnicodeRange(0xA8E0, 0xA8FF);
+    const range14 = generateUnicodeRange(0xA900, 0xA92F);
+    const range15 = generateUnicodeRange(0xA9E0, 0xA9FF);
+    const range16 = generateUnicodeRange(0xAA00, 0xAA5F);
+    const range17 = generateUnicodeRange(0xAA60, 0xAA7F);
+    const range18 = generateUnicodeRange(0xAB00, 0xAB2F);
+    const range19 = generateUnicodeRange(0xAB30, 0xAB6F);
+    const range20 = generateUnicodeRange(0xAB70, 0xABBF);
+    const range21 = generateUnicodeRange(0xABC0, 0xABFF);
+    const range22 = generateUnicodeRange(0x3200, 0x32FF);
+    const range23 = generateUnicodeRange(0x3300, 0x33FF);
+    const range24 = generateUnicodeRange(0x31F0, 0x31FF);
+    const range25 = generateUnicodeRange(0x31C0, 0x31EF);
+    const range26 = generateUnicodeRange(0x31A0, 0x31BF);
+    const range27 = generateUnicodeRange(0x3190, 0x319F);
+    const range28 = generateUnicodeRange(0x3130, 0x318F);
+    const range29 = generateUnicodeRange(0xA000, 0xA48F);
+    document.getElementById('range1').innerHTML = range1;
+    document.getElementById('range2').innerHTML = range2;
+    document.getElementById('range3').innerHTML = range3;
+    document.getElementById('range4').innerHTML = range4;
+    document.getElementById('range5').innerHTML = range5;
+    document.getElementById('range6').innerHTML = range6;
+    document.getElementById('range7').innerHTML = range7;
+    document.getElementById('range8').innerHTML = range8;
+    document.getElementById('range9').innerHTML = range9;
+    document.getElementById('range10').innerHTML = range10;
+    document.getElementById('range11').innerHTML = range11;
+    document.getElementById('range12').innerHTML = range12;
+    document.getElementById('range13').innerHTML = range13;
+    document.getElementById('range14').innerHTML = range14;
+    document.getElementById('range15').innerHTML = range15;
+    document.getElementById('range16').innerHTML = range16;
+    document.getElementById('range17').innerHTML = range17;
+    document.getElementById('range18').innerHTML = range18;
+    document.getElementById('range19').innerHTML = range19;
+    document.getElementById('range20').innerHTML = range20;
+    document.getElementById('range21').innerHTML = range21;
+    document.getElementById('range22').innerHTML = range22;
+    document.getElementById('range23').innerHTML = range23;
+    document.getElementById('range24').innerHTML = range24;
+    document.getElementById('range25').innerHTML = range25;
+    document.getElementById('range26').innerHTML = range26;
+    document.getElementById('range27').innerHTML = range27;
+    document.getElementById('range28').innerHTML = range28;
+    document.getElementById('range29').innerHTML = range29;
+}
 
-      document.getElementById("range1").innerHTML = range1;
-      document.getElementById("range2").innerHTML = range2;
-      document.getElementById("range3").innerHTML = range3;
-      document.getElementById("range4").innerHTML = range4;
-      document.getElementById("range5").innerHTML = range5;
-      document.getElementById("range6").innerHTML = range6;
-      document.getElementById("range7").innerHTML = range7;
-      document.getElementById("range8").innerHTML = range8;
-      document.getElementById("range9").innerHTML = range9;
-      document.getElementById("range10").innerHTML = range10;
-      document.getElementById("range11").innerHTML = range11;
-      document.getElementById("range12").innerHTML = range12;
-      document.getElementById("range13").innerHTML = range13;
-      document.getElementById("range14").innerHTML = range14;
-      document.getElementById("range15").innerHTML = range15;
-      document.getElementById("range16").innerHTML = range16;
-      document.getElementById("range17").innerHTML = range17;
-      document.getElementById("range18").innerHTML = range18;
-      document.getElementById("range19").innerHTML = range19;
-      document.getElementById("range20").innerHTML = range20;
-      document.getElementById("range21").innerHTML = range21;
-      document.getElementById("range22").innerHTML = range22;
-      document.getElementById("range23").innerHTML = range23;
-      document.getElementById("range24").innerHTML = range24;
-      document.getElementById("range25").innerHTML = range25;
-      document.getElementById("range26").innerHTML = range26;
-      document.getElementById("range27").innerHTML = range27;
-      document.getElementById("range28").innerHTML = range28;
-      document.getElementById("range29").innerHTML = range29;
-    }
-  </script>
+
+
+</script>
 </head>
 <body onload="displayUnicode()">
-  <div class="header-content">
-    <img
-      src="https://i.imgur.com/2MkyDCh.png"
-      alt="Logo"
-      style="width: 120px; height: auto"
-    />
+<div class="header-content">
+    <img src="https://i.imgur.com/2MkyDCh.png" alt="Logo" style="width: 120px; height: auto;">
     <h1>파란행성 특수문자 복사 사이트</h1>
-  </div>
-  <span class="copy-text">[글자를 클릭해서 복사하시오]</span>
-
-  <!-- 여러 범위 표시 -->
-  <div>
+</div>
+<span class="copy-text">[글자를 클릭해서 복사하시오]</span>
+<div>
     <h2>속담 알파벳 확장 (A960–A97F)</h2>
     <div id="range1" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>자바어 (A980–A9DF)</h2>
     <div id="range2" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>베트남 Daiwen (AA80–AADF)</h2>
     <div id="range3" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>I Ching hexagram의 기호 (4DC0–4DFF)</h2>
     <div id="range4" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>이순신 언어의 뿌리 (A490–A4CF)</h2>
     <div id="range4" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>Lisu (A4D0–A4FF)</h2>
     <div id="range5" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>이전 리수 (A500–A63F)</h2>
     <div id="range6" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>키릴 확장-B (A640–A69F)</h2>
     <div id="range7" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>톤 수정 편지 (A700–A71F)</h2>
     <div id="range8" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>라틴 확장-D (A720–A7FF)</h2>
     <div id="range9" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>인도 수치 (A830–A83F)</h2>
     <div id="range10" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>원 총리 Pagba (A840–A87F)</h2>
     <div id="range11" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>사우라 슈트라 (A880–A8DF)</h2>
     <div id="range12" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>데바 나가리 확장 (A8E0–A8FF)</h2>
     <div id="range13" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>카야 편지 (A900–A92F)</h2>
     <div id="range14" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>Myanmar Extended-B (A9E0–A9FF)</h2>
     <div id="range15" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>타타르어 (AA00–AA5F)</h2>
     <div id="range16" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>확장 버마어 (AA60–AA7F)</h2>
     <div id="range17" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>에티오피아 확장-A (AB00–AB2F)</h2>
     <div id="range18" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>Latin Extended-E (AB30–AB6F)</h2>
     <div id="range19" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>Cherokee Supplement (AB70–ABBF)</h2>
     <div id="range20" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>마니 푸리 (ABC0–ABFF)</h2>
     <div id="range21" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>이순신 언어의 뿌리 (A490–A4CF)</h2>
     <div id="range4" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>밴드 CJK 문자와 달 (3200–32FF)</h2>
     <div id="range22" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>CJK 문자 세트는 호환 (3300–33FF)</h2>
     <div id="range23" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>가타카나 소리 나는대로 확장 (31F0–31FF)</h2>
     <div id="range24" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>CJK는 스트로크 (31C0–31EF)</h2>
     <div id="range25" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>확장 된 음성 알파벳 (31A0–31BF)</h2>
     <div id="range26" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>상형 기호주의 사항 (3190–319F)</h2>
     <div id="range27" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>한글 알파벳 호환 (3130–318F)</h2>
     <div id="range28" class="unicode-container"></div>
-  </div>
-  <div>
+</div>
+<div>
     <h2>이순신 음절 (A000–A48F)</h2>
     <div id="range29" class="unicode-container"></div>
-  </div>
+</div>
 
-  <!-- ===== [JS] 눈송이 낙하 ===== -->
-  <script>
-    /**
-     * - 일정 간격으로 "❄" 눈송이 생성 (setInterval)
-     * - requestAnimationFrame으로 x,y 좌표 갱신 (아래로 이동)
-     * - .unicode-char와 충돌 시 해당 요소 내부에 눈송이(.anchored-snowflake)를 붙임
-     * - 화면 아래 벗어나면 제거
-     */
 
-    const SNOWFLAKE_COUNT = 200; // 동시에 화면에 존재 가능한 최대 눈송이 수
-    const SPAWN_INTERVAL = 400;  // 눈송이 생성 주기 (ms)
-    const FALL_SPEED_MIN = 1;    // 눈송이 낙하 최소 속도
-    const FALL_SPEED_MAX = 3;    // 눈송이 낙하 최대 속도
-    const SIZE_MIN = 16;         // 눈송이 최소 글자 크기(px)
-    const SIZE_MAX = 28;         // 눈송이 최대 글자 크기(px)
-
-    let activeSnowflakes = [];
-
-    function spawnSnowflake() {
-      if (activeSnowflakes.length >= SNOWFLAKE_COUNT) return;
-
-      const el = document.createElement("div");
-      el.className = "snowflake";
-      el.textContent = "❄";
-
-      const size = randBetween(SIZE_MIN, SIZE_MAX);
-      const startX = Math.random() * window.innerWidth;
-      const startY = -size - 10;
-      const speed = randBetween(FALL_SPEED_MIN, FALL_SPEED_MAX);
-
-      el.style.fontSize = size + "px";
-      el.style.transform = `translate(${startX}px, ${startY}px)`;
-
-      document.body.appendChild(el);
-      activeSnowflakes.push({ el, x: startX, y: startY, speed, size });
-    }
-
-    function updateSnowflakes() {
-      // .unicode-char와 충돌 체크
-      const allChars = document.querySelectorAll(".unicode-char");
-
-      for (let i = 0; i < activeSnowflakes.length; i++) {
-        const flake = activeSnowflakes[i];
-        if (!flake) continue;
-
-        // 아래로 이동
-        flake.y += flake.speed;
-
-        let anchored = false;
-        for (const charEl of allChars) {
-          const rect = charEl.getBoundingClientRect();
-
-          // 눈송이 중심 X
-          const flakeCenterX = flake.x + flake.size / 2;
-          // 눈송이 바닥 Y
-          const flakeBottomY = flake.y + flake.size;
-
-          // 충돌 판정
-          const hit =
-            flakeBottomY >= rect.top &&
-            flakeCenterX >= rect.left &&
-            flakeCenterX <= rect.right &&
-            flake.y <= rect.bottom;
-
-          if (hit) {
-            anchorSnowflakeToChar(flake, charEl, rect);
-            activeSnowflakes[i] = null;
-            anchored = true;
-            break;
-          }
-        }
-
-        // 화면 아래 벗어나면 제거
-        if (!anchored) {
-          if (flake.y > window.innerHeight) {
-            flake.el.remove();
-            activeSnowflakes[i] = null;
-          } else {
-            flake.el.style.transform = `translate(${flake.x}px, ${flake.y}px)`;
-          }
-        }
-      }
-
-      // null 제거
-      activeSnowflakes = activeSnowflakes.filter((f) => f !== null);
-
-      requestAnimationFrame(updateSnowflakes);
-    }
-
-    function anchorSnowflakeToChar(flake, charEl, rect) {
-      // 눈송이 제거
-      flake.el.remove();
-
-      // 새 DOM
-      const anchoredEl = document.createElement("div");
-      anchoredEl.className = "anchored-snowflake";
-      anchoredEl.textContent = "❄";
-      anchoredEl.style.fontSize = flake.size + "px";
-
-      // charEl 기준 좌표
-      const offsetX = flake.x - rect.left;
-      const offsetY = flake.y - rect.top;
-
-      anchoredEl.style.left = offsetX + "px";
-      anchoredEl.style.top = offsetY + "px";
-
-      charEl.appendChild(anchoredEl);
-    }
-
-    function randBetween(min, max) {
-      return Math.random() * (max - min) + min;
-    }
-
-    // 초기화
-    window.addEventListener("DOMContentLoaded", () => {
-      requestAnimationFrame(updateSnowflakes);
-      setInterval(spawnSnowflake, SPAWN_INTERVAL);
-    });
-  </script>
 </body>
 </html>
