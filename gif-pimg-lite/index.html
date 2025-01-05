@@ -1,209 +1,115 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>GIF프사 만들기 (GIF → WebM 후 SVG 삽입)</title>
-    <link rel="icon" href="https://i.imgur.com/2MkyDCh.png" type="image/png">
-    <!-- ffmpeg.wasm 라이브러리(브라우저에서 FFmpeg를 사용하기 위해 필요) -->
-    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.13/dist/umd/ffmpeg.min.js"></script>
-    <style>
-        .file-upload-wrapper {
-            text-align: center;
-            background-color: #ffffff;
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0);
-            min-width: 350px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: auto;
-        }
-
-        button {
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 20px;
-            padding: 10px 20px;
-            margin: 100px 0; /* Adjust the margin as needed */
-            width: 600px; /* Fixed width */
-            height: 61px; /* Fixed height */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
-            font-weight: bold;
-            font-size: 30px;
-        }
-
-        button:hover {
-            background-color: #005BDD;
-            transform: translateY(2px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        button:active {
-            background-color: #0026a3;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        #file-name {
-            margin: 10px 0;
-            font-weight: bold;
-            font-size: 30px;
-        }
-
-        #hidden-file-input {
-            display: none;
-        }
-
-        .header-content {
-            display: flex;
-            align-items: center;
-            justify-content: start;
-            margin-bottom: 20px;
-            font-size: 30px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-        }
-
-        .header-content img {
-            margin-right: 20px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>GIF → WebP → SVG (ffmpeg.js)</title>
 </head>
 <body>
-    <div class="file-upload-wrapper">
-        <div class="header-content">
-            <img src="https://i.imgur.com/2MkyDCh.png" alt="Logo" style="width: 120px; height: auto;">
-            <h1>파란행성 SVG 변환 사이트</h1>
-        </div>
-        <button id="custom-button">여기를 클릭해 GIF파일을 선택하세요</button>
-        <input type="file" id="hidden-file-input" accept="image/gif" />
-        <div id="file-name">파일이 선택되지 않았습니다.</div>
-        <button id="upload-button">여기를 클릭해 다운로드</button>
-    </div>
+  <h1>GIF를 애니메이션 WebP로 압축 후, SVG에 Base64 임베드</h1>
 
-    <script>
-        // ffmpeg.wasm 사용하기 위한 import
-        const { createFFmpeg, fetchFile } = FFmpeg;
+  <!-- 파일 입력 -->
+  <input type="file" id="fileInput" accept=".gif" />
+  <button onclick="convertGifToSvg()">변환하기</button>
 
-        // 사용자 정의 버튼 클릭 시, 실제 <input type="file">을 클릭
-        document.getElementById('custom-button').addEventListener('click', () => {
-            document.getElementById('hidden-file-input').click();
-        });
+  <p id="status" style="color:blue;"></p>
 
-        // 파일 선택 시, 파일명을 표시
-        document.getElementById('hidden-file-input').addEventListener('change', function() {
-            const fileNameDisplay = document.getElementById('file-name');
-            if (this.files && this.files.length > 0) {
-                fileNameDisplay.textContent = this.files[0].name;
-            } else {
-                fileNameDisplay.textContent = '파일이 선택되지 않았습니다.';
-            }
-        });
+  <!-- 결과 표시 -->
+  <h2>결과 SVG</h2>
+  <div id="result"></div>
 
-        // "다운로드" 버튼 클릭 시 GIF → WebM 변환 후, SVG로 다운로드
-        document.getElementById('upload-button').addEventListener('click', async () => {
-            const fileInput = document.getElementById('hidden-file-input');
-            if (!fileInput.files || fileInput.files.length === 0) {
-                alert('GIF파일을 먼저 선택해주세요!');
-                return;
-            }
+  <!-- ffmpeg.js (WebAssembly) 로드 -->
+  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.3/dist/ffmpeg.min.js"></script>
+  <script>
+    // ffmpeg 모듈
+    const { createFFmpeg, fetchFile } = FFmpeg;
+    const ffmpeg = createFFmpeg({ log: true }); // log: true이면, 콘솔에 진행 과정이 찍힘
 
-            const gifFile = fileInput.files[0];
+    async function convertGifToSvg() {
+      const fileInput = document.getElementById("fileInput");
+      const statusEl = document.getElementById("status");
+      const resultEl = document.getElementById("result");
+      resultEl.innerHTML = "";  // 이전 결과 초기화
 
-            try {
-                // 1) FFmpeg 인스턴스 생성
-                const ffmpeg = createFFmpeg({ log: false }); // log: true로 하면 변환 과정을 콘솔에서 확인 가능
-                await ffmpeg.load();
+      if (!fileInput.files.length) {
+        alert("GIF 파일을 선택하세요.");
+        return;
+      }
 
-                // 2) GIF 파일을 FFmpeg FS(File System)에 write
-                ffmpeg.FS('writeFile', 'input.gif', await fetchFile(gifFile));
+      const gifFile = fileInput.files[0];
+      statusEl.textContent = "ffmpeg.js 초기화(로드) 중... 잠시 기다리세요.";
+      
+      // ffmpeg.js 초기 로드 (최초 1회만)
+      if (!ffmpeg.isLoaded()) {
+        await ffmpeg.load();
+      }
 
-                // 3) GIF → WebM 변환
-                //   - CRF 값(압축률), 비트레이트 옵션 등을 조절하여 용량을 줄임
-                //   - libvpx 혹은 libvpx-vp9 코덱 사용 예시
-                await ffmpeg.run(
-                    '-i', 'input.gif',
-                    '-c:v', 'libvpx-vp9', 
-                    '-crf', '30',    // 값이 클수록 화질이 낮고 파일 크기가 작아짐
-                    '-b:v', '0',
-                    '-pix_fmt', 'yuv420p',
-                    'output.webm'
-                );
+      // 상태 갱신
+      statusEl.textContent = "GIF 파일을 웹Assembly 가상 FS에 적재 중...";
 
-                // 4) 변환된 WebM 파일을 FFmpeg FS에서 read
-                const data = ffmpeg.FS('readFile', 'output.webm');
+      // GIF를 Uint8Array로
+      const arrayBuffer = await gifFile.arrayBuffer();
+      const gifU8Array = new Uint8Array(arrayBuffer);
 
-                // 5) Blob으로 만들어 base64 인코딩
-                const webmBlob = new Blob([data.buffer], { type: 'video/webm' });
-                const webmBase64 = await blobToBase64(webmBlob);
+      // 가상 FS에 "input.gif" 라는 이름으로 저장
+      ffmpeg.FS('writeFile', 'input.gif', gifU8Array);
 
-                // 6) WebM의 실제 크기를 확인(디버깅 용)
-                // console.log('WebM Blob size(KB): ', Math.round(webmBlob.size / 1024));
+      // 상태 갱신
+      statusEl.textContent = "ffmpeg.js로 WebP 변환 중... (크면 시간 오래 걸림)";
 
-                // 7) 변환된 WebM을 <img>와 동일하게 <image>로 박아넣은 SVG 코드 생성
-                //    (video/webm data를 <image>가 해석하는 브라우저가 많지 않으니 "GIF 대체"처럼 쓸 목적일 경우엔
-                //     이 로직을 그대로 사용하는 것이 맞는지 여부는 검토가 필요합니다.
-                //     일반적으로 웹 브라우저에서 <image> 태그에 video/webm이 직접 삽입되는 기능은 제한적일 수 있음)
-                //
-                //    만약 'SVG 내부에 직접 "동영상"처럼' 보이기를 원한다면 <foreignObject>를 써야 할 수도 있지만,
-                //    여기서는 GIF 자리에 단순히 embed 목적으로 <image> 태그 예시를 보여드립니다.
-                //
-                //    ※ 실제로는 <image href="data:video/webm;base64, ..."/>를 인식하지 않는 브라우저가 많으므로,
-                //      "SVG 안에 그냥 WebM을 넣겠다"는 특수한 상황이 아니라면, 
-                //      실무에서는 이 방법이 호환성이 떨어집니다. (GIF 그대로 넣는 경우와 달라서)
-                //
-                //    아래는 질문 의도대로 "GIF 대신 WebM"을 삽입하는 예시 코드이니 참고만 해주세요.
+      // ffmpeg로 애니메이션 WebP 인코딩
+      // -c:v libwebp : 비디오 코덱 libwebp 사용
+      // -loop 0      : 애니메이션 무한 반복
+      // -q:v 50      : 품질(0 ~ 100, 낮을수록 압축률↑)
+      // output.webp  : 결과 파일 이름
+      await ffmpeg.run(
+        '-i', 'input.gif',
+        '-c:v', 'libwebp',
+        '-loop', '0',
+        '-q:v', '50',  // 필요하면 조절
+        'output.webp'
+      );
 
-                const img = new Image();
-                img.onload = function() {
-                    // 이미지의 width / height 값이 0이면 <image>에 그대로 쓰기 어려우니
-                    // 실제로는 webm(동영상) width/height 정보 추출이 필요.
-                    // 여기서는 간단히 300x300 고정 예시.
-                    const svgData = `
-                        <svg xmlns="http://www.w3.org/2000/svg" width="300" height="300">
-                            <image href="data:video/webm;base64,${webmBase64}" width="300" height="300"/>
-                        </svg>
-                    `;
-                    
-                    // 8) SVG 다운로드
-                    const downloadLink = document.createElement('a');
-                    downloadLink.href =
-                        'data:image/svg+xml;base64,' +
-                        window.btoa(unescape(encodeURIComponent(svgData)));
-                    downloadLink.download = 'converted_image.svg';
-                    document.body.appendChild(downloadLink);
-                    downloadLink.click();
-                    document.body.removeChild(downloadLink);
-                };
-                // 여기서는 webm을 Image()로 로드해도 실제로는 실패할 수 있으므로(브라우저가 video/webm을 이미지로 해석 못함)
-                // onload가 불리지 않을 수 있습니다. (예시 동작 시 주의)
-                // 편의상 onload 트리거를 위해 data URL로 임시 로드 시도:
-                img.src = 'data:video/webm;base64,' + webmBase64;
-            } catch (err) {
-                console.error(err);
-                alert('GIF 변환 중 오류가 발생했습니다: ' + err.message);
-            }
-        });
+      // 변환이 끝난 뒤, 결과 파일 read
+      const webpData = ffmpeg.FS('readFile', 'output.webp');
 
-        // Blob → Base64 변환 헬퍼 함수
-        function blobToBase64(blob) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => {
-                    const dataUrl = reader.result;
-                    // dataUrl은 "data:video/webm;base64,~~~~" 형태
-                    // 여기서 앞 부분("data:video/webm;base64,")을 제거하고 순수 base64만 추출할 수도 있음.
-                    // 하지만 우리는 SVG의 <image href="...">에 그대로 쓸 것이므로 'video/webm' 타입 표기까지 유지 가능.
-                    // 아래에서는 순수 base64 문자열만 반환하도록 처리:
-                    const base64 = dataUrl.split(',')[1];
-                    resolve(base64);
-                };
-                reader.onerror = (error) => reject(error);
-                reader.readAsDataURL(blob);
-            });
-        }
-    </script>
+      // Uint8Array → Base64
+      const webpBase64 = toBase64(webpData);
+
+      // 상태 갱신
+      statusEl.textContent = "변환 완료! 아래 SVG 확인";
+
+      // ★ SVG 생성 (원본 GIF 크기 가져오기 → 대충)
+      //   ffmpeg.js에서 메타데이터를 따로 뽑으려면 또 한 번 ffprobe 써야 함
+      //   여기서는 임시로 320x240 등 고정 치수로 처리하거나,
+      //   혹은 실제 GIF 폭/높이를 ffmpeg로 파싱해서 써도 됨
+      const svgWidth = 320; 
+      const svgHeight = 240;
+
+      const svgTemplate = `
+<svg 
+  xmlns="http://www.w3.org/2000/svg" 
+  width="${svgWidth}" 
+  height="${svgHeight}" 
+  viewBox="0 0 ${svgWidth} ${svgHeight}">
+  <image 
+    width="${svgWidth}" 
+    height="${svgHeight}"
+    href="data:image/webp;base64,${webpBase64}" />
+</svg>
+`;
+
+      // 결과 표시
+      resultEl.innerHTML = svgTemplate;
+    }
+
+    // Uint8Array -> Base64 문자열
+    function toBase64(u8Arr) {
+      let binary = '';
+      for (let i = 0; i < u8Arr.length; i++) {
+        binary += String.fromCharCode(u8Arr[i]);
+      }
+      return btoa(binary);
+    }
+  </script>
 </body>
 </html>
