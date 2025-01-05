@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>GIF -> WebM 변환 예시</title>
+  <link rel="icon" href="https://i.imgur.com/2MkyDCh.png" type="image/png">
+  <style>
+    .file-upload-wrapper {
+      text-align: center;
+      background-color: #ffffff;
+      border-radius: 15px;
+      min-width: 350px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: auto;
+    }
+    button {
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 20px;
+      margin: 30px 0; 
+      width: 300px; 
+      height: 50px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    button:hover {
+      background-color: #005BDD;
+      transform: translateY(2px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    button:active {
+      background-color: #0026a3;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    #file-name {
+      margin: 10px 0;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    #hidden-file-input {
+      display: none;
+    }
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: start;
+      margin-bottom: 20px;
+      font-size: 20px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    .header-content img {
+      margin-right: 20px;
+      width: 80px;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="file-upload-wrapper">
+    <div class="header-content">
+      <img src="https://i.imgur.com/2MkyDCh.png" alt="Logo">
+      <h1>파란행성 GIF -> WebM 변환</h1>
+    </div>
+    <button id="select-button">GIF 선택</button>
+    <input type="file" id="hidden-file-input" accept="image/gif" />
+    <div id="file-name">파일이 선택되지 않았습니다.</div>
+    <button id="download-button">WebM으로 다운로드</button>
+  </div>
+
+  <!-- ffmpeg.wasm (UMD or ESM) -->
+  <!-- 아래에서는 CDNs 중 하나인 unpkg/JSDelivr 예시로 가져옵니다. -->
+  <script type="module">
+    import { createFFmpeg, fetchFile } from "https://unpkg.com/@ffmpeg/ffmpeg@0.11.8/dist/ffmpeg.min.js";
+
+    const ffmpeg = createFFmpeg({ log: true });
+
+    // 파일 선택 버튼 이벤트
+    document.getElementById('select-button').addEventListener('click', () => {
+      document.getElementById('hidden-file-input').click();
+    });
+
+    // 파일 선택 시 파일명 표시
+    document.getElementById('hidden-file-input').addEventListener('change', function() {
+      const fileNameDisplay = document.getElementById('file-name');
+      if (this.files && this.files[0]) {
+        fileNameDisplay.textContent = this.files[0].name;
+      } else {
+        fileNameDisplay.textContent = '파일이 선택되지 않았습니다.';
+      }
+    });
+
+    // WebM 변환 후 다운로드
+    document.getElementById('download-button').addEventListener('click', async () => {
+      const fileInput = document.getElementById('hidden-file-input');
+      const file = fileInput.files[0];
+      if (!file) {
+        alert('GIF 파일을 선택한 후 진행해 주세요.');
+        return;
+      }
+
+      try {
+        // ffmpeg.wasm 로드
+        if (!ffmpeg.isLoaded()) {
+          await ffmpeg.load();
+        }
+
+        // input.gif를 ffmpeg.wasm의 가상 FS에 기록
+        ffmpeg.FS('writeFile', 'input.gif', await fetchFile(file));
+
+        // webm으로 변환 (단순 예시: VP9 코덱, 비트레이트 1M)
+        // -pix_fmt yuv420p 등 옵션을 원하는 대로 추가할 수 있음
+        await ffmpeg.run(
+          '-i', 'input.gif',
+          '-c:v', 'libvpx-vp9',
+          '-b:v', '1M',
+          'output.webm'
+        );
+
+        // 변환된 파일 읽어서 Blob 생성
+        const data = ffmpeg.FS('readFile', 'output.webm');
+        const webmBlob = new Blob([data.buffer], { type: 'video/webm' });
+
+        // 다운로드 링크 생성 후 다운로드
+        const url = URL.createObjectURL(webmBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'converted-video.webm'; // 원하는 파일명
+        link.click();
+
+        // 메모리 해제
+        URL.revokeObjectURL(url);
+
+        alert('WebM 변환 및 다운로드가 완료되었습니다!');
+      } catch (err) {
+        console.error(err);
+        alert('변환 중 오류가 발생했습니다. 콘솔 로그를 확인해주세요.');
+      }
+    });
+  </script>
+</body>
+</html>
