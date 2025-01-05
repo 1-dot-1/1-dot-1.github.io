@@ -2,107 +2,72 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>GIF → WebP → SVG (ffmpeg.js)</title>
+  <title>GIF → WebP with ffmpeg.js</title>
+  <!-- 1) ffmpeg.js 로드 (CDN) -->
+  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.3/dist/ffmpeg.min.js"></script>
 </head>
 <body>
-  <h1>GIF를 애니메이션 WebP로 압축 후, SVG에 Base64 임베드</h1>
+  <h1>GIF → WebP 변환 테스트</h1>
 
-  <!-- 파일 입력 -->
+  <!-- 2) HTML 엘리먼트 -->
   <input type="file" id="fileInput" accept=".gif" />
-  <button onclick="convertGifToSvg()">변환하기</button>
-
-  <p id="status" style="color:blue;"></p>
-
-  <!-- 결과 표시 -->
-  <h2>결과 SVG</h2>
+  <button onclick="convertGifToWebP()">변환하기</button>
+  <div id="status"></div>
   <div id="result"></div>
 
-  <!-- ffmpeg.js (WebAssembly) 로드 -->
-  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.3/dist/ffmpeg.min.js"></script>
+  <!-- 3) ffmpeg.js 사용 JS 코드 -->
   <script>
-    // ffmpeg 모듈
+    // 전역객체 FFmpeg에서 createFFmpeg, fetchFile 추출
     const { createFFmpeg, fetchFile } = FFmpeg;
-    const ffmpeg = createFFmpeg({ log: true }); // log: true이면, 콘솔에 진행 과정이 찍힘
+    // ffmpeg 인스턴스 생성
+    const ffmpeg = createFFmpeg({ log: true });
 
-    async function convertGifToSvg() {
+    async function convertGifToWebP() {
       const fileInput = document.getElementById("fileInput");
       const statusEl = document.getElementById("status");
       const resultEl = document.getElementById("result");
-      resultEl.innerHTML = "";  // 이전 결과 초기화
+      resultEl.textContent = ""; // 초기화
 
       if (!fileInput.files.length) {
         alert("GIF 파일을 선택하세요.");
         return;
       }
 
-      const gifFile = fileInput.files[0];
-      statusEl.textContent = "ffmpeg.js 초기화(로드) 중... 잠시 기다리세요.";
-      
-      // ffmpeg.js 초기 로드 (최초 1회만)
+      // 1) ffmpeg.load()
       if (!ffmpeg.isLoaded()) {
+        statusEl.textContent = "FFmpeg.js 로딩 중...";
         await ffmpeg.load();
       }
 
-      // 상태 갱신
-      statusEl.textContent = "GIF 파일을 웹Assembly 가상 FS에 적재 중...";
-
-      // GIF를 Uint8Array로
+      // 2) GIF 파일을 FFmpeg 가상 FS에 write
+      const gifFile = fileInput.files[0];
       const arrayBuffer = await gifFile.arrayBuffer();
-      const gifU8Array = new Uint8Array(arrayBuffer);
+      ffmpeg.FS('writeFile', 'input.gif', new Uint8Array(arrayBuffer));
 
-      // 가상 FS에 "input.gif" 라는 이름으로 저장
-      ffmpeg.FS('writeFile', 'input.gif', gifU8Array);
-
-      // 상태 갱신
-      statusEl.textContent = "ffmpeg.js로 WebP 변환 중... (크면 시간 오래 걸림)";
-
-      // ffmpeg로 애니메이션 WebP 인코딩
-      // -c:v libwebp : 비디오 코덱 libwebp 사용
-      // -loop 0      : 애니메이션 무한 반복
-      // -q:v 50      : 품질(0 ~ 100, 낮을수록 압축률↑)
-      // output.webp  : 결과 파일 이름
+      statusEl.textContent = "GIF → WebP 변환 중...";
+      
+      // 3) ffmpeg.run(...) 호출
       await ffmpeg.run(
         '-i', 'input.gif',
         '-c:v', 'libwebp',
         '-loop', '0',
-        '-q:v', '50',  // 필요하면 조절
+        '-q:v', '50',
         'output.webp'
       );
 
-      // 변환이 끝난 뒤, 결과 파일 read
+      // 4) 결과 읽기
       const webpData = ffmpeg.FS('readFile', 'output.webp');
+      statusEl.textContent = "완료! 파일 크기: " + webpData.length + " bytes";
 
-      // Uint8Array → Base64
-      const webpBase64 = toBase64(webpData);
+      // 만약 SVG에 넣을거라면 Base64 변환 + <svg><image>... 형태 작성 가능
+      const base64Webp = toBase64(webpData);
 
-      // 상태 갱신
-      statusEl.textContent = "변환 완료! 아래 SVG 확인";
-
-      // ★ SVG 생성 (원본 GIF 크기 가져오기 → 대충)
-      //   ffmpeg.js에서 메타데이터를 따로 뽑으려면 또 한 번 ffprobe 써야 함
-      //   여기서는 임시로 320x240 등 고정 치수로 처리하거나,
-      //   혹은 실제 GIF 폭/높이를 ffmpeg로 파싱해서 써도 됨
-      const svgWidth = 320; 
-      const svgHeight = 240;
-
-      const svgTemplate = `
-<svg 
-  xmlns="http://www.w3.org/2000/svg" 
-  width="${svgWidth}" 
-  height="${svgHeight}" 
-  viewBox="0 0 ${svgWidth} ${svgHeight}">
-  <image 
-    width="${svgWidth}" 
-    height="${svgHeight}"
-    href="data:image/webp;base64,${webpBase64}" />
-</svg>
-`;
-
-      // 결과 표시
-      resultEl.innerHTML = svgTemplate;
+      // 예시로 그냥 <img> 태그로 표시
+      const imgTag = document.createElement("img");
+      imgTag.src = "data:image/webp;base64," + base64Webp;
+      resultEl.appendChild(imgTag);
     }
 
-    // Uint8Array -> Base64 문자열
     function toBase64(u8Arr) {
       let binary = '';
       for (let i = 0; i < u8Arr.length; i++) {
