@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>gif 배사, 프사</title>
+<link rel="icon" href="https://i.imgur.com/2MkyDCh.png" type="image/png">
+<style>
+    body {
+        text-align: center; /* 수평 가운데 정렬 */
+        margin: 0; /* 기본 여백 제거 */
+        font-family: Arial, sans-serif;
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 20px; /* 이 값을 적절한 단위와 함께 설정하세요 */
+        margin-bottom: 20px;
+        font-size: 30px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .header-content img {
+        margin-right: 20px;
+    }
+
+    h1 {
+        margin-top: 20px;
+    }
+
+    .file-container {
+        margin: 20px 0;
+    }
+
+    #selectFileButton {
+        background-color: #007BFF;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 10px 20px;
+        margin: 10px 0;
+        width: 300px;
+        height: 50px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+        font-weight: bold;
+        font-size: 20px;
+        text-align: center;
+    }
+
+    #selectFileButton:hover {
+        background-color: #005BDD;
+        transform: translateY(2px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    #selectFileButton:active {
+        background-color: #0026a3;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    #selectedFileName {
+        display: block;
+        margin-top: 10px;
+        font-size: 16px;
+        color: #333;
+    }
+
+    #convertButton {
+        background-color: #007BFF;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 10px 20px;
+        margin: 10px 0;
+        width: 300px;
+        height: 50px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+        font-weight: bold;
+        font-size: 20px;
+        text-align: center;
+    }
+  
+    #convertButton:hover {
+        background-color: #005BDD;
+        transform: translateY(2px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+  
+    #convertButton:active {
+        background-color: #0026a3;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* 추가적인 스타일 조정 */
+    #resultContainer {
+        margin-top: 20px;
+    }
+
+    a.download-link {
+        display: inline-block;
+        margin-top: 10px;
+        background-color: #17a2b8;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 20px;
+        text-decoration: none;
+        transition: background-color 0.3s ease;
+    }
+
+    a.download-link:hover {
+        background-color: #117a8b;
+    }
+</style>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+</head>
+<body>
+<div class="header-content">
+    <img src="https://i.imgur.com/2MkyDCh.png" alt="Logo" style="width: 120px; height: auto;">
+    <h1>GIF배사, 프사</h1>
+</div>
+
+<div class="file-container">
+    <button id="selectFileButton">파일 선택</button>
+    <input type="file" id="gifInput" accept="image/gif" style="display:none">
+    <span id="selectedFileName">선택된 파일 없음</span>
+</div>
+
+<button id="convertButton">변환하기</button>
+
+<div id="resultContainer"></div>
+
+<script>
+let pyodideReadyPromise = loadPyodide({
+    indexURL : "https://cdn.jsdelivr.net/pyodide/v0.23.4/full/"
+});
+
+async function runPython(gifBytes) {
+    let pyodide = await pyodideReadyPromise;
+    await pyodide.loadPackage("micropip");
+
+    // micropip을 통해 Pillow 설치
+    await pyodide.runPythonAsync(`
+import micropip
+try:
+    await micropip.install('Pillow')
+except:
+    pass
+`);
+
+    // Python 코드 실행
+    const code = `
+import base64
+from io import BytesIO
+from PIL import Image, ImageSequence
+
+gif_bytes = bytes(gif_bytes)
+
+def image_to_base64_webp(image, quality=50):
+    # GIF 프레임을 WebP로 50% 정도 품질로 압축
+    buffered = BytesIO()
+    # RGB 변환(팔레트 이미지 등 호환성 문제 방지)
+    image = image.convert("RGB")
+    image.save(buffered, format="WEBP", quality=quality)
+    return base64.b64encode(buffered.getvalue()).decode()
+
+def gif_to_svg(gif_bytes):
+    gif = Image.open(BytesIO(gif_bytes))
+    frames = [frame.copy() for frame in ImageSequence.Iterator(gif)]
+    total_duration = sum(frame.info.get('duration', 100) for frame in frames) / 1000.0
+
+    # WebP(Base64)로 변환
+    frames_base64 = [image_to_base64_webp(frame, 50) for frame in reversed(frames)]
+
+    svg_images = "".join([
+        f'<image id="frame{i}" xlink:href="data:image/webp;base64,{base64_str}" x="0" y="0" '
+        f'height="{gif.height}px" width="{gif.width}px" style="opacity:0;"/>'
+        for i, base64_str in enumerate(frames_base64)
+    ])
+
+    animations_css = "".join([
+        f"""#frame{i} {{
+            animation: play {total_duration}s steps(1) infinite;
+            animation-delay: {-i * (total_duration / len(frames))}s;
+        }}"""
+        for i in range(len(frames))
+    ])
+
+    # keyframes_css를 구성할 때, 단순히 0%, 100% 말고도
+    # 각 프레임이 보이게 되는 시점을 steps로 처리(조정 가능)
+    keyframes_css = f\"\"\"
+    @keyframes play {{
+        0%, 100% {{ opacity: 0; }}
+        {"; ".join([f"{(100/len(frames))*i}% {{ opacity: 1; }}" for i in range(len(frames))])}
+        {"; ".join([f"{(100/len(frames))*i}% {{ opacity: 0; }}" for i in range(1, len(frames)+1)])}
+    }}
+    \"\"\"
+
+    svg_content = f\"\"\"<svg width="{gif.width}px" height="{gif.height}px" viewBox="0 0 {gif.width} {gif.height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <style>
+        {animations_css}
+        {keyframes_css}
+    </style>
+    {svg_images}
+    </svg>
+    \"\"\"
+    return svg_content
+
+converted_svg = gif_to_svg(gif_bytes)
+converted_svg
+`;
+    pyodide.globals.set("gif_bytes", gifBytes);
+    let svg_content = await pyodide.runPythonAsync(code);
+    return svg_content;
+}
+
+document.getElementById('selectFileButton').addEventListener('click', () => {
+    document.getElementById('gifInput').click();
+});
+
+document.getElementById('gifInput').addEventListener('change', () => {
+    const fileInput = document.getElementById('gifInput');
+    const selectedFileName = document.getElementById('selectedFileName');
+    if (fileInput.files && fileInput.files.length > 0) {
+        selectedFileName.textContent = "선택된 파일: " + fileInput.files[0].name;
+    } else {
+        selectedFileName.textContent = '선택된 파일 없음';
+    }
+});
+
+document.getElementById('convertButton').addEventListener('click', async () => {
+    const fileInput = document.getElementById('gifInput');
+    if (!fileInput.files || fileInput.files.length === 0) {
+        alert("먼저 GIF 파일을 업로드하세요.");
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const arrayBuffer = await file.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+
+    const svgContent = await runPython(bytes);
+    const resultContainer = document.getElementById('resultContainer');
+    resultContainer.innerHTML = svgContent;
+
+    // SVG 다운로드 링크
+    const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const downloadLink = document.createElement('a');
+    downloadLink.href = url;
+    downloadLink.download = 'animated_svg.svg';
+    downloadLink.textContent = 'Download SVG';
+    downloadLink.classList.add('download-link');
+    resultContainer.appendChild(document.createElement('br'));
+    resultContainer.appendChild(downloadLink);
+});
+</script>
+</body>
+</html>
