@@ -1,74 +1,109 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <title>GIF → WebP → SVG</title>
-  <!-- (1) ffmpeg.js를 먼저 로드 -->
-  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.3/dist/ffmpeg.min.js"></script>
+  <meta charset="UTF-8">
+  <title>GIF -> Animated WebP -> SVG (Single Thread)</title>
+  
+  <!-- @ffmpeg/ffmpeg 0.11.0 예시 -->
+  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.0/dist/ffmpeg.min.js"></script>
 </head>
 <body>
-  <h1>GIF → WebP 변환 테스트</h1>
-  <input type="file" id="fileInput" accept=".gif"/>
-  <button onclick="convertGifToWebP()">변환하기</button>
-  <p id="status"></p>
-  <div id="result"></div>
+  <h1>GIF -> Animated WebP (Single Thread) -> SVG</h1>
+  
+  <input type="file" id="gif-input" accept="image/gif" />
+  <button id="convert-btn">변환 후 다운로드</button>
+  <pre id="log"></pre>
 
-  <!-- (2) ffmpeg.js를 사용한 자바스크립트 코드 -->
   <script>
-    // ffmpeg.js가 전역 객체 FFmpeg를 등록했으므로, 이제 참조 가능
     const { createFFmpeg, fetchFile } = FFmpeg;
-    const ffmpeg = createFFmpeg({ log: true });
 
-    async function convertGifToWebP() {
-      const statusEl = document.getElementById("status");
-      const resultEl = document.getElementById("result");
-      const fileInput = document.getElementById("fileInput");
+    // ★ 핵심: 멀티 스레드 빌드가 아니라 싱글 스레드 빌드를 로드하는 경로 지정
+    const ffmpeg = createFFmpeg({
+      log: true,
+      corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'
+    });
 
-      if (!fileInput.files.length) {
-        alert("GIF 파일을 선택하세요!");
+    const logDiv = document.getElementById('log');
+    function log(text) {
+      console.log(text);
+      logDiv.textContent += text + '\n';
+    }
+
+    document.getElementById('convert-btn').addEventListener('click', async () => {
+      const file = document.getElementById('gif-input').files[0];
+      if (!file) {
+        alert('GIF 파일을 먼저 선택하세요!');
         return;
       }
 
-      // 1) ffmpeg.load()가 아직 안 됐다면 로드
       if (!ffmpeg.isLoaded()) {
-        statusEl.textContent = "ffmpeg.js 로딩 중...";
+        log('ffmpeg.wasm 로드 중...');
         await ffmpeg.load();
+        log('ffmpeg.wasm 로드 완료!');
       }
 
-      // 2) input.gif 라는 이름으로 FFmpeg 가상FS에 파일 저장
-      statusEl.textContent = "GIF 업로드 중...";
-      const file = fileInput.files[0];
-      const arrayBuffer = await file.arrayBuffer();
-      ffmpeg.FS('writeFile', 'input.gif', new Uint8Array(arrayBuffer));
+      // GIF 파일을 ffmpeg FS에 씁니다.
+      ffmpeg.FS('writeFile', 'input.gif', await fetchFile(file));
 
-      // 3) GIF → WebP 변환 (애니메이션 유지)
-      statusEl.textContent = "GIF → WebP 변환 중...";
+      // FFmpeg로 GIF -> animated WebP 변환
+      log('GIF -> WebP 변환 시작...');
       await ffmpeg.run(
         '-i', 'input.gif',
         '-c:v', 'libwebp',
-        '-loop', '0',
-        '-q:v', '50',  // 화질(0=최고화질~100=최저화질)
+        '-qscale', '50',  // 화질 (0~100, 낮을수록 용량↑/화질↑)
+        '-loop', '0',     // 무한 반복
         'output.webp'
       );
+      log('GIF -> WebP 변환 완료!');
 
-      // 4) 결과 읽기
+      // 결과 WebP 읽기
       const webpData = ffmpeg.FS('readFile', 'output.webp');
-      statusEl.textContent = `변환 완료! WebP 크기: ${webpData.length} bytes`;
+      const base64WebP = arrayBufferToBase64(webpData);
 
-      // 5) Base64 변환하여 <img> 태그나 <svg><image>로 삽입
-      const webpBase64 = u8ArrToBase64(webpData);
+      // width/height 파악 위해 Blob -> Image 로드
+      const blob = new Blob([webpData], { type: 'image/webp' });
+      const blobURL = URL.createObjectURL(blob);
 
-      // 간단히 <img>로 보여주기
-      resultEl.innerHTML = `<img src="data:image/webp;base64,${webpBase64}" alt="webp result" />`;
-    }
+      const tempImg = new Image();
+      tempImg.onload = function() {
+        const w = tempImg.width;
+        const h = tempImg.height;
+        log(`WebP 해상도: ${w} x ${h}`);
 
-    // Uint8Array -> Base64
-    function u8ArrToBase64(u8Arr) {
+        // SVG 생성
+        const svgData = `
+<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">
+  <image href="data:image/webp;base64,${base64WebP}"
+         width="${w}" height="${h}" />
+</svg>`;
+        const base64Svg = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+
+        // 다운로드
+        const link = document.createElement('a');
+        link.href = base64Svg;
+        link.download = 'animated_image.svg';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        URL.revokeObjectURL(blobURL);
+        log('SVG 다운로드 완료!');
+      };
+      tempImg.onerror = (err) => {
+        log('WebP 이미지 로드 실패');
+        console.error(err);
+      };
+      tempImg.src = blobURL;
+    });
+
+    // Uint8Array -> Base64 변환 유틸
+    function arrayBufferToBase64(buffer) {
       let binary = '';
-      for (let i = 0; i < u8Arr.length; i++) {
-        binary += String.fromCharCode(u8Arr[i]);
+      const bytes = new Uint8Array(buffer);
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
       }
-      return btoa(binary);
+      return window.btoa(binary);
     }
   </script>
 </body>
