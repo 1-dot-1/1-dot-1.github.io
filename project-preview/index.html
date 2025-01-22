@@ -28,23 +28,25 @@
       position: relative;
       z-index: 9999;                /* 배경 클릭과 구분되도록 z-index 조정 */
       border: none;
-      border-radius: 20px;          /* 모서리가 둥글게 */
-      padding: 15px 40px;           /* 가로로 길게 */
-      font-size: 16px;
+      border-radius: 50px;          /* 모서리가 둥글게 */
+      padding: 20px 100px;           /* 가로로 길게 */
+      font-size: 30px;
+      font-weight: bold;
       color: #fff;
-      background-color: #3498db;
+      background-color: #2c2c2cDD;
       cursor: pointer;
+      transition: background-color 0.3s;
     }
 
     .move-button:hover {
-      background-color: #2980b9;
+      background-color: #131313DD;
     }
   </style>
 </head>
 <body>
 
   <!-- 가운데 표시될 버튼 -->
-  <button class="move-button" id="moveButton">원본 작품으로 이동하기</button>
+  <button class="move-button" id="moveButton">클릭해서 이동하기</button>
 
   <script>
     /*
@@ -81,14 +83,14 @@
     // 어디든 클릭하면 원본 작품으로 이동
     document.body.addEventListener("click", () => {
       // 원본 링크: https://playentry.org/project/글자
-      window.location.href = `https://playentry.org/project/${projectId}`;
+      window.location.href = `https://playentry.org/noframe/${projectId}`;
     });
 
     // 버튼 클릭 시에도 원본 작품으로 이동 (버튼 클릭 시 body의 클릭 이벤트까지 중복 실행될 필요는 없으므로 버블링 방지)
     const btn = document.getElementById("moveButton");
     btn.addEventListener("click", (event) => {
       event.stopPropagation();
-      window.location.href = `https://playentry.org/project/${projectId}`;
+      window.location.href = `https://playentry.org/noframe/${projectId}`;
     });
   </script>
 </body>
