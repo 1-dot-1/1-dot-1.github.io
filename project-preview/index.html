@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>PlayEntry Preview</title>
+  <style>
+    /* 페이지 전체 초기화 */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* 전체 화면을 배경 이미지로 채우기 위한 설정 */
+    body {
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
+      cursor: pointer; /* 아무 곳이나 클릭 유도 */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* 가운데 버튼 스타일 */
+    .move-button {
+      position: relative;
+      z-index: 9999;                /* 배경 클릭과 구분되도록 z-index 조정 */
+      border: none;
+      border-radius: 20px;          /* 모서리가 둥글게 */
+      padding: 15px 40px;           /* 가로로 길게 */
+      font-size: 16px;
+      color: #fff;
+      background-color: #3498db;
+      cursor: pointer;
+    }
+
+    .move-button:hover {
+      background-color: #2980b9;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 가운데 표시될 버튼 -->
+  <button class="move-button" id="moveButton">원본 작품으로 이동하기</button>
+
+  <script>
+    /*
+      URL 예시: 
+        https://(사이트도메인)/?=https://playentry.org/project/글자
+
+      1) window.location.search => "?=https://playentry.org/project/글자"
+      2) "?="를 제거한 뒤 "https://playentry.org/project/글자"를 얻는다.
+      3) 글자를 추출해서 (글자 앞 4글자) + (글자).png 구조로 이미지 경로를 만든다.
+      4) 배경 이미지로 설정하고, 클릭 시 원본 작품으로 이동하도록 처리.
+    */
+
+    // 쿼리 문자열 추출
+    let param = window.location.search; 
+    // "?=https://playentry.org/project/글자" 형태라고 가정
+
+    // "?=" 부분 제거
+    if (param.startsWith("?=")) {
+      param = param.substring(2);
+      // param 은 이제 "https://playentry.org/project/글자" 가 됨
+    }
+
+    // "/project/" 기준으로 글자 추출
+    const splitted = param.split("/project/");
+    // splitted[0] = "https://playentry.org", splitted[1] = "글자"
+    const projectId = splitted[1] || ""; // 혹시 잘못된 URL이어도 에러 방지
+
+    // 글자 앞 4글자
+    const first4 = projectId.substring(0,4);
+
+    // 배경 이미지를 "https://playentry.org/uploads/thumb/(글자 앞4글자)/(글자).png" 로 설정
+    document.body.style.backgroundImage = `url("https://playentry.org/uploads/thumb/${first4}/${projectId}.png")`;
+
+    // 어디든 클릭하면 원본 작품으로 이동
+    document.body.addEventListener("click", () => {
+      // 원본 링크: https://playentry.org/project/글자
+      window.location.href = `https://playentry.org/project/${projectId}`;
+    });
+
+    // 버튼 클릭 시에도 원본 작품으로 이동 (버튼 클릭 시 body의 클릭 이벤트까지 중복 실행될 필요는 없으므로 버블링 방지)
+    const btn = document.getElementById("moveButton");
+    btn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      window.location.href = `https://playentry.org/project/${projectId}`;
+    });
+  </script>
+</body>
+</html>
