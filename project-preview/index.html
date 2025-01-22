@@ -83,14 +83,14 @@
     // 어디든 클릭하면 원본 작품으로 이동
     document.body.addEventListener("click", () => {
       // 원본 링크: https://playentry.org/project/글자
-      window.location.href = `https://playentry.org/noframe/${projectId}`;
+      window.location.href = `https://playentry.org/iframe/${projectId}`;
     });
 
     // 버튼 클릭 시에도 원본 작품으로 이동 (버튼 클릭 시 body의 클릭 이벤트까지 중복 실행될 필요는 없으므로 버블링 방지)
     const btn = document.getElementById("moveButton");
     btn.addEventListener("click", (event) => {
       event.stopPropagation();
-      window.location.href = `https://playentry.org/noframe/${projectId}`;
+      window.location.href = `https://playentry.org/iframe/${projectId}`;
     });
   </script>
 </body>
