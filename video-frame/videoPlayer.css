@@ -13,6 +13,7 @@
     height: 100vh;
     font-family: sans-serif;
   }
+  
   /* 플레이어 컨테이너 */
   .player-container {
     width: 1200px;
@@ -143,6 +144,54 @@
     filter: drop-shadow(0 0 5px rgba(0,0,0,0.3));
   }
   
+  /* 볼륨 버튼 */
+  .volume-button {
+    width: 36px;
+    height: 36px;
+    background: #007BFF;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    filter: drop-shadow(0 0 6px rgba(0,0,0,0.8));
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .volume-button:hover {
+    background: #005bbd;
+  }
+  .volume-button svg {
+    width: 20px;
+    height: 20px;
+    position: absolute;
+  }
+  
+  /* 볼륨 팝업(위로 펼쳐지는 영역) */
+  .volume-popup {
+    display: none;
+    position: absolute;
+    bottom: 100%; /* 버튼 바로 위쪽 */
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 8px;
+    background: rgba(0,0,0,0.8);
+    padding: 8px;
+    border-radius: 4px;
+  }
+  .volume-popup.show {
+    display: block;
+  }
+  .volume-slider-vertical {
+    width: 8px;
+    height: 100px;
+    background: #ccc;
+    cursor: pointer;
+    writing-mode: bt-lr;           /* 세로 슬라이더(브라우저마다 다를 수 있음) */
+    -webkit-appearance: slider-vertical;
+  }
+  
   /* 전체화면 버튼 */
   .fullscreen-button {
     width: 36px;
@@ -156,6 +205,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
   }
   .fullscreen-button:hover {
     background: #005bbd;
